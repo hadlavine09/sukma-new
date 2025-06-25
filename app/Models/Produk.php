@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Models;
+
+use App\Models\Kategori;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Produk extends Model
+{
+    use HasFactory, SoftDeletes;
+
+    // Tentukan nama tabel (jika berbeda dari konvensi)
+    protected $table = 'produks';
+    protected $primaryKey = 'id';
+
+    // Kolom yang dapat diisi mass-assignment
+    protected $fillable = [
+        'kode_produk',
+        'nama_produk',
+        'deskripsi_produk',
+        'stok_produk',
+        'harga_produk',
+        'gambar_produk',
+        'kode_kategori',
+        'status_produk',
+    ];
+
+    protected $connection = 'pgsql'; // kalau pakai pgsql, wajib ini
+
+    public static function getSemuaProduk()
+    {
+        return self::all(); // Ambil semua data dari tabel kategoris
+    }
+    public function kategori()
+{
+    return $this->belongsTo(Kategori::class, 'kode_kategori', 'kode_kategori');
+}
+
+}
