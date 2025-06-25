@@ -489,7 +489,7 @@ class IzinTokoController extends Controller
         // dd($toko);
         switch ($toko->status_toko) {
             case 'izinkan':
-                return redirect()->route('dashboardtoko');
+                return redirect()->route('dashboard');
             case 'tidak_diizinkan':
                 return view('toko.reject', compact('toko'));
             case 'proses':

@@ -1,10 +1,10 @@
     <!-- Navbar-->
-    <header class="app-header"><a class="app-header__logo" href="{{ asset('assets_backend/index.html')}}">Vali</a>
-        <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="{{ asset('assets_backend/#')}}" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
+    <header class="app-header"><a class="app-header__logo" href="{{ route('dashboard')}}">Vali</a>
+        <!-- Sidebar toggle button--><a class="app-sidebar__toggle" href="{{ route('dashboard')}}" data-toggle="sidebar" aria-label="Hide Sidebar"></a>
         <!-- Navbar Right Menu-->
         <ul class="app-nav">
           <!--Notification Menu-->
-          <li class="dropdown"><a class="app-nav__item" href="{{ asset('assets_backend/#')}}" data-bs-toggle="dropdown" aria-label="Show notifications"><i class="bi bi-bell fs-5"></i></a>
+          <li class="dropdown"><a class="app-nav__item" href="{{ route('dashboard')}}" data-bs-toggle="dropdown" aria-label="Show notifications"><i class="bi bi-bell fs-5"></i></a>
             <ul class="app-notification dropdown-menu dropdown-menu-right">
               <li class="app-notification__title">You have 4 new notifications.</li>
               <div class="app-notification__content">
@@ -39,11 +39,11 @@
                       <p class="app-notification__meta">2 days ago</p>
                     </div></a></li>
               </div>
-              <li class="app-notification__footer"><a href="{{ asset('assets_backend/#')}}">See all notifications.</a></li>
+              <li class="app-notification__footer"><a href="{{ route('dashboard')}}">See all notifications.</a></li>
             </ul>
           </li>
           <!-- User Menu-->
-          <li class="dropdown"><a class="app-nav__item" href="{{ asset('assets_backend/#')}}" data-bs-toggle="dropdown" aria-label="Open Profile Menu"><i class="bi bi-person fs-4"></i></a>
+          <li class="dropdown"><a class="app-nav__item" href="{{ route('dashboard')}}" data-bs-toggle="dropdown" aria-label="Open Profile Menu"><i class="bi bi-person fs-4"></i></a>
             <ul class="dropdown-menu settings-menu dropdown-menu-right">
               <li><a class="dropdown-item" href="{{ asset('assets_backend/page-user.html')}}"><i class="bi bi-gear me-2 fs-5"></i> Settings</a></li>
               <li><a class="dropdown-item" href="{{ asset('assets_backend/page-user.html')}}"><i class="bi bi-person me-2 fs-5"></i> Profile</a></li>

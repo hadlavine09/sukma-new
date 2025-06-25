@@ -1,26 +1,28 @@
 <?php
 
-use App\Http\Controllers\Auth\GoogleController;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\DetailProdukController;
-use App\Http\Controllers\IzinTokoController;
-use App\Http\Controllers\KategoriController;
-use App\Http\Controllers\KategoriTokoController;
-use App\Http\Controllers\MaterialController;
-use App\Http\Controllers\ProdukController;
-use App\Http\Controllers\RegisterController;
-use App\Http\Controllers\SupplierController;
-use App\Http\Controllers\TagController;
-use App\Http\Controllers\TokoController;
-use App\Http\Controllers\TransaksiMaterial;
-use App\Http\Controllers\UmkmAuthController;
-use App\Http\Controllers\UserManagement\HakAksesController;
-use App\Http\Controllers\UserManagement\PermissionController;
-use App\Http\Controllers\UserManagement\RoleController;
-use App\Http\Controllers\UserManagement\UserController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\TagController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TokoController;
+use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\TransaksiMaterial;
+use App\Http\Controllers\IzinTokoController;
+use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\UmkmAuthController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\DetailProdukController;
+use App\Http\Controllers\KategoriTokoController;
+use App\Http\Controllers\UserManagement\RoleController;
+use App\Http\Controllers\UserManagement\UserController;
+use App\Http\Controllers\UserManagement\HakAksesController;
+use App\Http\Controllers\UserManagement\PermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -68,17 +70,13 @@ Route::get('/', function () {
 // Routes yang hanya bisa diakses oleh user yang sudah login
 Route::middleware(['auth'])->group(function () {
     // Routes untuk admin dan superadmin
-    Route::middleware('role:admin|superadmin')->group(function () {
-        Route::get('/dashboard-admin', function () {
-            return view('backend.dashboard');
-        });
+    Route::middleware('role:toko|superadmin')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/aksesDashboard', [DashboardController::class, 'aksesDashboard'])->name('aksesDashboard');
     });
     Route::middleware('role:toko')->group(function () {
-        Route::get('/dashboard-toko', function () {
-            return view('toko.dashboard');
-        });
 
-        Route::get('/dashboard-toko', [IzinTokoController::class, 'dashboard_toko'])->name('dashboardtoko');
+        // Route::get('/dashboard-toko', [IzinTokoController::class, 'dashboard_toko'])->name('dashboardtoko');
         Route::get('/verifikasi-toko', [IzinTokoController::class, 'verifikasi_toko'])->name('verifikasitoko');
         Route::post('/verifikasi-toko/{step}', [IzinTokoController::class, 'verifikasi_toko_store'])->name('verifikasitokostore');
         Route::get('/verifikasi-toko/wait', [IzinTokoController::class, 'waitPage'])->name('verifikasi_toko.wait');
@@ -292,24 +290,3 @@ Route::prefix('FrontEnd')->group(function () {
 
 Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
 Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
-
-// Route::prefix('Toko')->group(function () {
-//     Route::get('/LoginToko', function () {
-//         return view('toko.auth.login');
-//     });
-//     // Route::get('/RegisterToko', function () {
-//     //     return view('toko.auth.register');
-//     // });
-//     Route::get('/Dashboard-Toko', function () {
-//         return view('toko.dashboard');
-//     })->name('dashboard.toko');
-//     // Route::get('/Verifikasi-Toko', function () {
-//     //     return view('toko.verifikasi');
-//     // })->name('verifikasi.toko');
-//     Route::get('Verifikasi-Toko', [IzinTokoController::class, 'verifikasi_toko'])->name('verifikasi_toko')->middleware('auth');
-// });
-// Route::middleware(['auth'])->group(function () {
-// });
-// Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
-
-// Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

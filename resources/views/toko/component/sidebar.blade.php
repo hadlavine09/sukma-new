@@ -24,8 +24,6 @@
                 <i class="treeview-indicator bi bi-chevron-right"></i>
             </a>
             <ul class="treeview-menu">
-                <li><a class="treeview-item" href="/admin-toko/profile"><i class="icon bi bi-circle-fill"></i> Profil
-                        Toko</a></li>
                 <li><a class="treeview-item" href="/admin-toko/produk"><i class="icon bi bi-circle-fill"></i> Produk</a>
                 </li>
                 <li><a class="treeview-item" href="/admin-toko/kategori"><i class="icon bi bi-circle-fill"></i> Kategori

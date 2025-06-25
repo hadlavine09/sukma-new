@@ -10,18 +10,31 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginController extends Controller
 {
-    protected function redirectTo()
+ protected function redirectTo()
     {
         $user = Auth::user();
 
-        // Ambil role user dari tabel role_user
+        // Cegah error jika user tidak ditemukan
+        if (!$user) {
+            return '/login';
+        }
+
+        // Ambil role user dari relasi role_user
         $role = DB::table('role_user')
             ->where('user_id', $user->id)
             ->join('roles', 'role_user.role_id', '=', 'roles.id')
-            ->value('roles.name');
+            ->select('roles.name')
+            ->first();
+
+        // Cegah error jika role tidak ditemukan
+        if (!$role) {
+            return '/';
+        }
+
+        $roleName = $role->name;
 
         // Jika role adalah 'toko', cek status toko
-        if ($role === 'toko') {
+        if ($roleName === 'toko') {
             $toko = DB::table('tokos')
                 ->where('pemilik_toko_id', $user->id)
                 ->whereNull('deleted_at')
@@ -29,20 +42,20 @@ class LoginController extends Controller
                 ->first();
 
             if ($toko) {
-                if (in_array($toko->status_toko, ['proses', 'tidak_diizinkan'])) {
-                    return '/verifikasi-toko/wait';
-                } elseif ($toko->status_toko === 'izinkan') {
-                    return '/dashboard-toko';
-                }
+                return match ($toko->status_toko) {
+                    'proses', 'tidak_diizinkan' => route('verifikasi_toko.wait'),
+                    'izinkan'                   => route('dashboard'),
+                    default                     => route('verifikasi_toko.wait'),
+                };
             }
 
             // Jika belum pernah mengajukan toko
-            return '/verifikasi-toko/wait';
+            return route('verifikasi_toko.wait');
         }
 
-        // Redirect default untuk role lainnya
-        return match ($role) {
-            'superadmin', 'admin' => '/dashboard-admin',
+        // Redirect default berdasarkan role lainnya
+        return match ($roleName) {
+            'superadmin', 'admin' => route('dashboard'),
             'user'                => '/Home',
             default               => '/',
         };
