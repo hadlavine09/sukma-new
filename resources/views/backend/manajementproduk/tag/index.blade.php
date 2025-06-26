@@ -31,12 +31,13 @@
                         </div>
                     @endif
 
-                    <div class="mb-3 text-end">
-                        <a href="{{ route('tag.create') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-lg"></i> Tambah Data
-                        </a>
-                    </div>
-
+                    @if ($role->id != 2)
+                        <div class="mb-3 text-end">
+                            <a href="{{ route('tag.create') }}" class="btn btn-primary">
+                                <i class="bi bi-plus-lg"></i> Tambah Data
+                            </a>
+                        </div>
+                    @endif
                     <div class="table-responsive">
                         <table class="table table-hover table-bordered" id="tagTable">
                             <thead>
@@ -46,6 +47,7 @@
                                     <th>Nama Tag</th>
                                     <th>Gambar</th>
                                     <th>Deskripsi</th>
+                                    <th>Kategori Produk</th>
                                     <th>Aksi</th>
                                 </tr>
                             </thead>
@@ -116,6 +118,7 @@ $(document).ready(function() {
                 }
             },
             { data: 'deskripsi_tag', name: 'deskripsi_tag' },
+            { data: 'kategori_produk', name: 'kategori_produk' },
             { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
         ]
     });

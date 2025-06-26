@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\KategoriProduk;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 
 class Tag extends Model
@@ -15,11 +16,8 @@ class Tag extends Model
     protected $table = 'tags'; // pastikan nama tabel benar
     protected $primaryKey = 'id';
 
-    protected $fillable = [
-        'kode_tag',
-        'nama_tag',
-        'deskripsi_tag',
-        'gambar_tag'
+    protected $guarded = [
+        'id'
     ];
 
 
@@ -27,5 +25,9 @@ class Tag extends Model
     public static function getSemuaTag()
     {
         return self::all(); // Ambil semua data dari tabel tags
+    }
+     public function kategoriProduk()
+    {
+        return $this->belongsTo(KategoriProduk::class, 'kategori_produk_id');
     }
 }

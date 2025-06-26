@@ -9,7 +9,7 @@ use App\Http\Controllers\TokoController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\TransaksiMaterial;
 use App\Http\Controllers\IzinTokoController;
-use App\Http\Controllers\KategoriController;
+use App\Http\Controllers\KategoriProdukController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SupplierController;
@@ -88,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/Home', function () {
             return view('frontend.produk');
         });
-        Route::get('/kategori/{nama_kategori}', [KategoriController::class, 'detail_kategori'])->name('frontend.detail_kategori');
+        Route::get('/kategori/{nama_kategori}', [KategoriProdukController::class, 'detail_kategori'])->name('frontend.detail_kategori');
         Route::get('/detail/{nama_produk}', [DetailProdukController::class, 'detailproduk'])->name('frontend.detailproduk');
         Route::post('tambahkeranjang', [CartController::class, 'tambahkeranjang'])->name('frontend.tambahkeranjang');
         Route::get('keranjang', [CartController::class, 'keranjang'])->name('frontend.keranjang');
@@ -143,8 +143,8 @@ Route::prefix('UserManagement')->group(function () {
     });
 });
 
-Route::prefix('Manajemen-Toko')->group(function () {
-    Route::prefix('Kategori')->group(function () {
+Route::prefix('manajemen-toko')->group(function () {
+    Route::prefix('kategori-toko')->group(function () {
         Route::get('/', [KategoriTokoController::class, 'index'])->name('kategori_toko.index');
         Route::get('create', [KategoriTokoController::class, 'create'])->name('kategori_toko.create');
         Route::post('store', [KategoriTokoController::class, 'store'])->name('kategori_toko.store');
@@ -152,6 +152,24 @@ Route::prefix('Manajemen-Toko')->group(function () {
         Route::get('show', [KategoriTokoController::class, 'show'])->name('kategori_toko.show');
         Route::put('update/{id}', [KategoriTokoController::class, 'update'])->name('kategori_toko.update');
         Route::post('destroy', [KategoriTokoController::class, 'destroy'])->name('kategori_toko.destroy');
+    });
+    Route::prefix('tag')->group(function () {
+        Route::get('/', [TagController::class, 'index'])->name('tag.index');
+        Route::get('create', [TagController::class, 'create'])->name('tag.create');
+        Route::post('store', [TagController::class, 'store'])->name('tag.store');
+        Route::put('update/{id}', [TagController::class, 'update'])->name('tag.update');
+        Route::post('destroy', [TagController::class, 'destroy'])->name('tag.destroy');
+        Route::get('edit/{id}', [TagController::class, 'edit'])->name('tag.edit');
+        Route::get('show/{id}', [TagController::class, 'show'])->name('tag.show');
+    });
+    Route::prefix('kategori-produk')->group(function () {
+        Route::get('/', [KategoriProdukController::class, 'index'])->name('kategori_produk.index');
+        Route::get('create', [KategoriProdukController::class, 'create'])->name('kategori_produk.create');
+        Route::post('store', [KategoriProdukController::class, 'store'])->name('kategori_produk.store');
+        Route::put('update/{id}', [KategoriProdukController::class, 'update'])->name('kategori_produk.update');
+        Route::post('destroy', [KategoriProdukController::class, 'destroy'])->name('kategori_produk.destroy');
+        Route::get('edit/{id}', [KategoriProdukController::class, 'edit'])->name('kategori_produk.edit');
+        Route::get('show/{id}', [KategoriProdukController::class, 'show'])->name('kategori_produk.show');
     });
     Route::prefix('Daftar-Toko')->group(function () {
         Route::get('/', [IzinTokoController::class, 'index'])->name('izin_toko.index');
@@ -166,7 +184,7 @@ Route::prefix('Manajemen-Toko')->group(function () {
         Route::post('izinkan', [IzinTokoController::class, 'izinkan'])->name('izin_toko.izinkan');
         Route::post('tidak_izinkan', [IzinTokoController::class, 'tidak_izinkan'])->name('izin_toko.tidak_izinkan');
     });
-    Route::prefix('Toko')->group(function () {
+    Route::prefix('toko')->group(function () {
         Route::get('/', [TokoController::class, 'index'])->name('toko.index');
         Route::get('create', [TokoController::class, 'create'])->name('toko.create');
         Route::post('store', [TokoController::class, 'store'])->name('toko.store');
@@ -180,24 +198,7 @@ Route::prefix('Manajemen-Toko')->group(function () {
 
 Route::prefix('Manajemen-Produk')->group(function () {
 
-    Route::prefix('tag')->group(function () {
-        Route::get('index', [TagController::class, 'index'])->name('tag.index');
-        Route::get('create', [TagController::class, 'create'])->name('tag.create');
-        Route::post('store', [TagController::class, 'store'])->name('tag.store');
-        Route::put('update/{id}', [TagController::class, 'update'])->name('tag.update');
-        Route::post('destroy', [TagController::class, 'destroy'])->name('tag.destroy');
-        Route::get('edit/{id}', [TagController::class, 'edit'])->name('tag.edit');
-        Route::get('show/{id}', [TagController::class, 'show'])->name('tag.show');
-    });
-    Route::prefix('kategori')->group(function () {
-        Route::get('index', [KategoriController::class, 'index'])->name('kategori.index');
-        Route::get('create', [KategoriController::class, 'create'])->name('kategori.create');
-        Route::post('store', [KategoriController::class, 'store'])->name('kategori.store');
-        Route::put('update/{id}', [KategoriController::class, 'update'])->name('kategori.update');
-        Route::post('destroy', [KategoriController::class, 'destroy'])->name('kategori.destroy');
-        Route::get('edit/{id}', [KategoriController::class, 'edit'])->name('kategori.edit');
-        Route::get('show/{id}', [KategoriController::class, 'show'])->name('kategori.show');
-    });
+
     Route::prefix('produk')->group(function () {
         Route::get('/', [ProdukController::class, 'index'])->name('produk.index');
         Route::get('create', [ProdukController::class, 'create'])->name('produk.create');

@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Tag;
 use Illuminate\Http\Request;
+use App\Models\KategoriProduk;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -15,45 +17,61 @@ class TagController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
-    {
-        if ($request->ajax()) {
-            // Ambil data tag
-            $tag = Tag::getSemuaTag();
 
-            return DataTables::of($tag)
-                ->addIndexColumn()
-                ->editColumn('created_at', function ($data) {
-                    return \Carbon\Carbon::parse($data->created_at)->format('d M Y, H:i'); // Format waktu
-                })
-                ->addColumn('action', function ($data) {
-                    // Tombol untuk Show, Edit dan Hapus
-                    return '
-                        <a href="' . route('tag.show', $data->kode_tag) . '" class="btn btn-info btn-sm">
-                            <i class="bi bi-eye"></i> Show
-                        </a>
+public function index(Request $request)
+{
+
+    $role = DB::table('role_user')
+    ->where('user_id', Auth::id())
+    ->join('roles', 'role_user.role_id', '=', 'roles.id')
+    ->select('roles.*')
+    ->first();
+
+    if ($request->ajax()) {
+
+        $tag = Tag::with('kategoriProduk')->get();
+        return DataTables::of($tag)
+            ->addIndexColumn()
+            ->editColumn('kategori_produk', function ($data) {
+                return $data->kategoriProduk->nama_kategori_produk ?? '-';
+            })
+            ->editColumn('created_at', function ($data) {
+                return \Carbon\Carbon::parse($data->created_at)->format('d M Y, H:i');
+            })
+            ->addColumn('action', function ($data) use ($role) {
+                $btn = '
+                    <a href="' . route('tag.show', $data->kode_tag) . '" class="btn btn-info btn-sm">
+                        <i class="bi bi-eye"></i> Show
+                    </a>';
+
+                if ($role->id != 2) {
+                    $btn .= '
                         <a href="' . route('tag.edit', $data->kode_tag) . '" class="btn btn-warning btn-sm">
                             <i class="bi bi-pencil"></i> Edit
                         </a>
-                        <a href="javascript:void(0);" class="btn btn-danger btn-sm delete-btn" data-id="' . $data->kode_tag . '" data-nm="' . $data->nama_tag . '">
+                        <a href="javascript:void(0);" class="btn btn-danger btn-sm delete-btn"
+                            data-id="' . $data->kode_tag . '" data-nm="' . $data->nama_tag . '">
                             <i class="bi bi-trash"></i> Hapus
-                        </a>
-                    ';
-                })
-                ->rawColumns(['action']) // Menandai kolom 'action' sebagai raw HTML untuk menghindari escaping
-                ->make(true);  // DataTables JSON response
-        }
-        return view('backend.manajementproduk.tag.index');
+                        </a>';
+                }
 
+                return $btn;
+            })
+            ->rawColumns(['action'])
+            ->make(true);
     }
+
+    return view('backend.manajementproduk.tag.index', compact('role'));
+}
+
 
     /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
-        return view('backend.manajementproduk.tag.create');
-
+      $kategoriProduks = KategoriProduk::all(); // Ambil semua kategori
+    return view('backend.manajementproduk.tag.create', compact('kategoriProduks'));
     }
 
     /**

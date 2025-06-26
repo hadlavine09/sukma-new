@@ -7,6 +7,7 @@ use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\KategoriProduk;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -30,6 +31,7 @@ class TokoController extends Controller
                 return DataTables::of($toko)
                 ->addIndexColumn()
                 ->addColumn('action', function ($data) {
+
                     // Tombol untuk Show, Edit dan Hapus
                     return '
                         <a href="' . route('toko.show', $data->kode_toko) . '" class="btn btn-info btn-sm">
@@ -108,7 +110,7 @@ class TokoController extends Controller
             $gambar = $request->file('gambar_kategori')->store('kategori', 'public');
 
                                                                                     // Menentukan kode kategori otomatis
-            $lastKategori = Kategori::orderBy('kode_kategori', 'desc')->first();    // Ambil kategori terakhir
+            $lastKategori = KategoriProduk::orderBy('kode_kategori', 'desc')->first();    // Ambil kategori terakhir
             $lastKode     = $lastKategori ? $lastKategori->kode_kategori : 'KT000'; // Jika tidak ada, mulai dari KT000
 
                                                       // Ambil angka terakhir dari kode (setelah 'KT')
@@ -119,7 +121,7 @@ class TokoController extends Controller
             $newKode = 'KT' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
 
             // Menyimpan kategori baru
-            Kategori::create([
+            KategoriProduk::create([
                 'kode_kategori'      => $newKode,
                 'nama_kategori'      => $request->nama_kategori,
                 'deskripsi_kategori' => $request->deskripsi_kategori,
@@ -144,7 +146,7 @@ class TokoController extends Controller
     public function show($kode_kategori)
     {
         // Ambil data kategori berdasarkan kode_kategori
-        $kategori = Kategori::where('kode_kategori', $kode_kategori)->first();
+        $kategori = KategoriProduk::where('kode_kategori', $kode_kategori)->first();
 
         // Validasi: jika data tidak ditemukan
         if (! $kategori) {
@@ -157,7 +159,7 @@ class TokoController extends Controller
     public function edit($kode_kategori)
     {
         // Mengambil data kategori berdasarkan kode_kategori
-        $kategori = Kategori::where('kode_kategori', $kode_kategori)->first();
+        $kategori = KategoriProduk::where('kode_kategori', $kode_kategori)->first();
 
         // Validasi jika kategori tidak ditemukan
         if (! $kategori) {
@@ -193,7 +195,7 @@ class TokoController extends Controller
             }
 
             // Mencari kategori berdasarkan kode_kategori
-            $kategori = Kategori::where('kode_kategori', $kode_kategori)->first();
+            $kategori = KategoriProduk::where('kode_kategori', $kode_kategori)->first();
 
             // Validasi jika kategori tidak ditemukan
             if (! $kategori) {

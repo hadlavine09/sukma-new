@@ -33,9 +33,9 @@ class Produk extends Model
     {
         return self::all(); // Ambil semua data dari tabel kategoris
     }
-    public function kategori()
+    public function kategoriproduk()
 {
-    return $this->belongsTo(Kategori::class, 'kode_kategori', 'kode_kategori');
+    return $this->belongsTo(KategoriProduk::class, 'kode_kategori_produk', 'kode_kategori_produk');
 }
 
 }

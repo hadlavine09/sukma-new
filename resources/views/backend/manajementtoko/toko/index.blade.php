@@ -32,10 +32,6 @@
                 </div>
             @endif
 
-            <div class="mb-3">
-                <a href="{{ route('toko.create') }}" class="btn btn-primary"><i class="bi bi-plus"></i> Tambah Toko</a>
-            </div>
-
             <div class="table-responsive">
                 <table class="table table-hover align-middle border shadow-sm rounded" id="tokoTable">
                     <thead class="table-light">

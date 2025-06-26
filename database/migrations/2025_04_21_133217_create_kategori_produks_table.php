@@ -11,17 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('produks', function (Blueprint $table) {
+        Schema::create('kategori_produks', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_produk')->unique();
-            $table->string('nama_produk');
-            $table->text('deskripsi_produk')->nullable();
-            $table->unsignedInteger('stok_produk')->default(0);
-            $table->string('harga_produk');
-            $table->string('gambar_produk')->nullable();
+            $table->string('kode_kategori_produk')->unique();
+            $table->string('nama_kategori_produk');
+            $table->string('gambar_kategori_produk')->nullable();
+            $table->text('deskripsi_kategori_produk')->nullable();
             $table->unsignedBigInteger('kategori_toko_id');
-            $table->enum('status_produk', ['publik', 'private'])->default('private');
-            $table->enum('status_draf_produk', ['Aktif', 'Tidak Aktif'])->default('Aktif');
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('kategori_toko_id')->references('id')->on('kategori_tokos')->onUpdate('cascade')->onDelete('cascade');
@@ -34,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('produks');
+        Schema::dropIfExists('kategori_produks');
     }
 };

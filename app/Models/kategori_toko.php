@@ -14,10 +14,5 @@ class kategori_toko extends Model
     protected $table = 'kategori_tokos';
     protected $primaryKey = 'id';
 
-    protected $fillable = [
-        'kode_kategori_toko',
-        'nama_kategori_toko',
-        'gambar_kategori_toko',
-        'deskripsi_kategori_toko'
-    ];
+    protected $guarded = ['id'];
 }

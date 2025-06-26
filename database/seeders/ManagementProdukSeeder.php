@@ -4,150 +4,137 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 
 class ManagementProdukSeeder extends Seeder
 {
     public function run(): void
     {
-        // Format waktu sesuai permintaan: TAHUNBULANHARI-JAMMENITDETIK
-        $timestamp = Carbon::now()->format('Ymd-His');
-
-         $gambars = [
-            [
-                'kode_gambar' => 'IMG001',
-                'nama_gambar' => "{$timestamp}-IMG001-makanan.png",
-                'path_gambar' => "uploads/gambar/{$timestamp}-IMG001-makanan.png",
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_gambar' => 'IMG002',
-                'nama_gambar' => "{$timestamp}-IMG002-minuman.png",
-                'path_gambar' => "uploads/gambar/{$timestamp}-IMG002-minuman.png",
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_gambar' => 'IMG003',
-                'nama_gambar' => "{$timestamp}-IMG003-nasigoreng.jpg",
-                'path_gambar' => "uploads/gambar/{$timestamp}-IMG003-nasigoreng.jpg",
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_gambar' => 'IMG004',
-                'nama_gambar' => "{$timestamp}-IMG004-esteh.jpg",
-                'path_gambar' => "uploads/gambar/{$timestamp}-IMG004-esteh.jpg",
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_gambar' => 'IMG005',
-                'nama_gambar' => "{$timestamp}-IMG005-pedas.png",
-                'path_gambar' => "uploads/gambar/{$timestamp}-IMG005-pedas.png",
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_gambar' => 'IMG006',
-                'nama_gambar' => "{$timestamp}-IMG006-dingin.png",
-                'path_gambar' => "uploads/gambar/{$timestamp}-IMG006-dingin.png",
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
+        // 1. Seed kategori_tokos
+        $kategoriTokos = [
+            ['kode_kategori_toko' => 'KTK001', 'nama_kategori_toko' => 'Makanan & Minuman'],
+            ['kode_kategori_toko' => 'KTK002', 'nama_kategori_toko' => 'Elektronik'],
+            ['kode_kategori_toko' => 'KTK003', 'nama_kategori_toko' => 'Fashion'],
+            ['kode_kategori_toko' => 'KTK004', 'nama_kategori_toko' => 'Kecantikan & Perawatan Diri'],
+            ['kode_kategori_toko' => 'KTK005', 'nama_kategori_toko' => 'Kesehatan'],
+            ['kode_kategori_toko' => 'KTK006', 'nama_kategori_toko' => 'Ibu & Bayi'],
+            ['kode_kategori_toko' => 'KTK007', 'nama_kategori_toko' => 'Rumah Tangga'],
+            ['kode_kategori_toko' => 'KTK008', 'nama_kategori_toko' => 'Otomotif'],
+            ['kode_kategori_toko' => 'KTK009', 'nama_kategori_toko' => 'Hobi & Koleksi'],
+            ['kode_kategori_toko' => 'KTK010', 'nama_kategori_toko' => 'Mainan & Anak-anak'],
+            ['kode_kategori_toko' => 'KTK011', 'nama_kategori_toko' => 'Olahraga & Outdoor'],
+            ['kode_kategori_toko' => 'KTK012', 'nama_kategori_toko' => 'Buku & Alat Tulis'],
+            ['kode_kategori_toko' => 'KTK013', 'nama_kategori_toko' => 'Komputer & Aksesoris'],
+            ['kode_kategori_toko' => 'KTK014', 'nama_kategori_toko' => 'Gaming'],
+            ['kode_kategori_toko' => 'KTK015', 'nama_kategori_toko' => 'Properti & Kontrakan'],
+            ['kode_kategori_toko' => 'KTK016', 'nama_kategori_toko' => 'Jasa & Layanan'],
+            ['kode_kategori_toko' => 'KTK017', 'nama_kategori_toko' => 'Pertanian & Peternakan'],
+            ['kode_kategori_toko' => 'KTK018', 'nama_kategori_toko' => 'Hewan Peliharaan'],
+            ['kode_kategori_toko' => 'KTK019', 'nama_kategori_toko' => 'Produk Digital'],
+            ['kode_kategori_toko' => 'KTK020', 'nama_kategori_toko' => 'Lain-lain'],
         ];
+        foreach ($kategoriTokos as &$item) {
+            $item['created_at'] = $item['updated_at'] = Carbon::now();
+        }
+        DB::table('kategori_tokos')->insert($kategoriTokos);
+        $kategoriToko = DB::table('kategori_tokos')->pluck('id', 'kode_kategori_toko');
 
-        DB::table('gambars')->insert($gambars);
+        // 2. kategori_produks
+        $kategoriProduksRaw = [
+            ['KTK001', 'Makanan Siap Saji'],
+            ['KTK001', 'Minuman (Kopi, Jus, Teh)'],
+            ['KTK001', 'Kue & Roti'],
+            ['KTK003', 'Fashion Pria'],
+            ['KTK004', 'Skincare'],
+            ['KTK014', 'Konsol Game'],
+            ['KTK009', 'Barang Koleksi'],
+            ['KTK020', 'Produk Tidak Berkategori Spesifik'],
+        ];
+        $kategoriProduks = [];
+        foreach ($kategoriProduksRaw as $i => $item) {
+            $kategoriProduks[] = [
+                'kode_kategori_produk' => 'KTP' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'nama_kategori_produk' => $item[1],
+                'kategori_toko_id' => $kategoriToko[$item[0]],
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now(),
+            ];
+        }
+        DB::table('kategori_produks')->insert($kategoriProduks);
+        $kategoriProduk = DB::table('kategori_produks')->pluck('id', 'nama_kategori_produk');
 
-        // Data tags dengan gambar
+        // 3. tags
         $tags = [
-            [
-                'kode_tag' => 'TG001',
-                'nama_tag' => 'Pedas',
-                'gambar_tag' => 'IMG005',
-                'deskripsi_tag' => 'Tag untuk makanan pedas.',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_tag' => 'TG002',
-                'nama_tag' => 'Dingin',
-                'gambar_tag' => 'IMG006',
-                'deskripsi_tag' => 'Tag untuk minuman dingin.',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
+            ['kode' => 'TG001', 'nama' => 'Pedas', 'kategori' => 'Makanan Siap Saji'],
+            ['kode' => 'TG002', 'nama' => 'Dingin', 'kategori' => 'Minuman (Kopi, Jus, Teh)'],
+            ['kode' => 'TG003', 'nama' => 'Best Seller', 'kategori' => 'Kue & Roti'],
+            ['kode' => 'TG004', 'nama' => 'Diskon', 'kategori' => 'Fashion Pria'],
+            ['kode' => 'TG005', 'nama' => 'Viral', 'kategori' => 'Skincare'],
+            ['kode' => 'TG006', 'nama' => 'Baru Rilis', 'kategori' => 'Konsol Game'],
+            ['kode' => 'TG007', 'nama' => 'Limited Edition', 'kategori' => 'Barang Koleksi'],
+            ['kode' => 'TG008', 'nama' => 'Murah', 'kategori' => 'Produk Tidak Berkategori Spesifik'],
         ];
-
-        DB::table('tags')->insert($tags);
-
-        // Data kategori
-        $kategoris = [
-            [
-                'kode_kategori' => 'KT001',
-                'nama_kategori' => 'Makanan',
-                'gambar_kategori' => 'IMG001',
-                'deskripsi_kategori' => 'Kategori untuk produk makanan',
+        $tagsFinal = [];
+        foreach ($tags as $tag) {
+            $tagsFinal[] = [
+                'kode_tag' => $tag['kode'],
+                'nama_tag' => $tag['nama'],
+                'kategori_produk_id' => $kategoriProduk[$tag['kategori']],
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_kategori' => 'KT002',
-                'nama_kategori' => 'Minuman',
-                'gambar_kategori' => 'IMG002',
-                'deskripsi_kategori' => 'Kategori untuk produk minuman',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
+            ];
+        }
+        DB::table('tags')->insert($tagsFinal);
+
+        // 4. toko
+        $toko = [
+            'kode_toko' => 'TOKO001',
+            'pemilik_toko_id' => 2,
+            'kategori_toko_id' => $kategoriToko['KTK001'],
+            'nama_toko' => 'Toko Makanan Enak',
+            'logo_toko' => 'default_logo.png',
+            'no_hp_toko' => '081234567890',
+            'alamat_toko' => 'Jl. Contoh No. 123, Jakarta',
+            'deskripsi_toko' => 'Menjual berbagai makanan siap saji dan minuman segar.',
+            'status_toko' => 'izinkan',
+            'status_aktif_toko' => true,
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ];
+        $tokoId = DB::table('tokos')->insertGetId($toko);
 
-        DB::table('kategoris')->insert($kategoris);
-
-        // Data produk
-        $produks = [
-            [
-                'kode_produk' => 'PRD001',
-                'nama_produk' => 'Nasi Goreng Spesial',
-                'deskripsi_produk' => 'Nasi goreng dengan telur, ayam, dan sayuran segar.',
-                'stok_produk' => 50,
-                'harga_produk' => 25000.00,
-                'gambar_produk' => 'IMG003',
-                'kode_kategori' => 'KT001',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_produk' => 'PRD002',
-                'nama_produk' => 'Es Teh Manis',
-                'deskripsi_produk' => 'Minuman teh manis segar dengan es batu.',
-                'stok_produk' => 100,
-                'harga_produk' => 8000.00,
-                'gambar_produk' => 'IMG004',
-                'kode_kategori' => 'KT002',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ]
+        // 5. detail toko
+        $detail = [
+            'toko_id' => $tokoId,
+            'nama_ktp' => 'Admin Toko',
+            'nomor_ktp' => '2345678901234567',
+            'nomor_kk' => '1122334455667788',
+            'foto_ktp' => 'ktp_admin.jpg',
+            'foto_kk' => 'kk_admin.jpg',
+            'nama_bank' => 'Bank Contoh',
+            'nomor_rekening' => '1234567890',
+            'nama_pemilik_rekening' => 'Admin Toko',
+            'email_cs' => 'cs@tokomakanan.com',
+            'whatsapp_cs' => '081234567890',
+            'link_instagram' => 'https://instagram.com/tokomakanan',
+            'link_facebook' => 'https://facebook.com/tokomakanan',
+            'link_tiktok' => 'https://tiktok.com/@tokomakanan',
+            'link_google_maps' => 'https://goo.gl/maps/example',
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ];
+        DB::table('detail_tokos')->insert($detail);
 
-        DB::table('produks')->insert($produks);
-
-        // Relasi tag_produks (pivot)
-        $tag_produks = [
-            [
-                'kode_tag' => 'TG001',
-                'kode_produk' => 'PRD001',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'kode_tag' => 'TG002',
-                'kode_produk' => 'PRD002',
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
+        // 6. izin toko
+        $izin = [
+            'toko_id' => $tokoId,
+            'nomor_izin' => 'IZIN-001-2025',
+            'nama_dokumen' => 'Surat Izin Usaha Toko',
+            'file_dokumen' => 'izin_toko001.pdf',
+            'tanggal_terbit' => now(),
+            'created_at' => Carbon::now(),
+            'updated_at' => Carbon::now(),
         ];
-
-        DB::table('tag_produks')->insert($tag_produks);
+        DB::table('izin_tokos')->insert($izin);
     }
 }

@@ -2,25 +2,21 @@
 
 namespace App\Models;
 
+use App\Models\kategori_toko;
 use App\Models\Produk;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class Kategori extends Model
+class KategoriProduk extends Model
 {
     use HasFactory;
     use SoftDeletes;
 
-    protected $table = 'kategoris'; // pastikan nama tabel benar
+    protected $table = 'kategori_produks'; // pastikan nama tabel benar
     protected $primaryKey = 'id';
 
-    protected $fillable = [
-        'kode_kategori',
-        'nama_kategori',
-        'deskripsi_kategori',
-        'gambar_kategori'
-    ];
+    protected $guarded = ['id'];
 
 
 
@@ -30,8 +26,12 @@ class Kategori extends Model
     }
     public function produks()
     {
-        return $this->hasMany(Produk::class, 'kode_kategori', 'kode_kategori');
+        return $this->hasMany(Produk::class, 'kode_kategori_produk', 'kode_kategori_produk');
     }
+    public function kategoriToko()
+{
+    return $this->belongsTo(kategori_toko::class, 'kategori_toko_id');
+}
 
 
 }

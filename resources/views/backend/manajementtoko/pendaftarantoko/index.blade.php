@@ -31,10 +31,10 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
-                <div class="mb-3">
+                {{-- <div class="mb-3">
                     <a href="{{ route('izin_toko.create') }}" class="btn btn-primary"><i class="bi bi-plus"></i> Tambah
                         Toko</a>
-                </div>
+                </div> --}}
                 <div class="table-responsive">
                     <table class="table table-hover align-middle border shadow-sm rounded" id="izinTokoTable">
                         <thead class="table-light">

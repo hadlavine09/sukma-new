@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Carbon\Carbon;
-use App\Models\Kategori;
 use Illuminate\Http\Request;
 use App\Models\kategori_toko;
 use Illuminate\Support\Facades\DB;
