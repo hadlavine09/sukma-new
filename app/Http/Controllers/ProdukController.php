@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use Carbon\Carbon;
 use App\Models\Tag;
 use App\Models\Produk;
-use App\Models\Kategori;
 use Illuminate\Http\Request;
+use App\Models\KategoriProduk;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -61,9 +61,8 @@ class ProdukController extends Controller
      */
     public function create()
     {
-        $kategori = Kategori::getSemuaKategori();
-        $tags = Tag::getSemuaTag();
-        return view('backend.manajementproduk.produk.create',compact('kategori','tags'));
+        $kategori = KategoriProduk::getSemuaKategori();
+        return view('backend.manajementproduk.produk.create',compact('kategori'));
     }
 
     /**

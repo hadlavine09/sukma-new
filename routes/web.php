@@ -196,7 +196,7 @@ Route::prefix('manajemen-toko')->group(function () {
 
 });
 
-Route::prefix('Manajemen-Produk')->group(function () {
+Route::prefix('manajemen-produk')->group(function () {
 
 
     Route::prefix('produk')->group(function () {
