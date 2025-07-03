@@ -37,12 +37,6 @@ class TokoController extends Controller
                         <a href="' . route('toko.show', $data->kode_toko) . '" class="btn btn-info btn-sm">
                             <i class="bi bi-eye"></i> Show
                         </a>
-                        <a href="' . route('toko.edit', $data->kode_toko) . '" class="btn btn-warning btn-sm">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
-                        <a href="javascript:void(0);" class="btn btn-danger btn-sm delete-btn" data-id="' . $data->kode_toko . '" data-nm="' . $data->nama_toko . '">
-                            <i class="bi bi-trash"></i> Hapus
-                        </a>
                     ';
                 })
                 ->rawColumns(['action']) // Menandai kolom 'action' sebagai raw HTML untuk menghindari escaping
@@ -194,7 +188,7 @@ class TokoController extends Controller
         ELSE 8 END")
             ->get();
 
-        return view('backend.manajementtoko.pendaftarantoko.show', compact('tokoshow', 'jadwalOperasional'));
+        return view('backend.manajementtoko.toko.show', compact('tokoshow', 'jadwalOperasional'));
     }
     public function edit($kode_kategori)
     {

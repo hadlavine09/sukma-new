@@ -172,7 +172,7 @@ Route::prefix('manajemen-toko')->group(function () {
         Route::get('edit/{id}', [KategoriProdukController::class, 'edit'])->name('kategori_produk.edit');
         Route::get('show/{id}', [KategoriProdukController::class, 'show'])->name('kategori_produk.show');
     });
-    Route::prefix('Daftar-Toko')->group(function () {
+    Route::prefix('daftar-toko')->group(function () {
         Route::get('/', [IzinTokoController::class, 'index'])->name('izin_toko.index');
         Route::get('create', [IzinTokoController::class, 'create'])->name('izin_toko.create');
         Route::post('store', [IzinTokoController::class, 'store'])->name('izin_toko.store');

@@ -191,11 +191,11 @@
                                     <label class="col-sm-2 col-form-label">{{ $hari }}</label>
                                     <div class="col-sm-5">
                                         <input type="time" name="jadwal[{{ $hari }}][buka]"
-                                            class="form-control" required>
+                                            class="form-control">
                                     </div>
                                     <div class="col-sm-5">
                                         <input type="time" name="jadwal[{{ $hari }}][tutup]"
-                                            class="form-control" required>
+                                            class="form-control">
                                     </div>
                                 </div>
                             @endforeach

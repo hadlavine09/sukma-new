@@ -318,158 +318,195 @@ class IzinTokoController extends Controller
     }
 
     public function verifikasi_toko(Request $request)
-    {
-        $step = (int) $request->get('step', 1);
+{
+    $step = (int) $request->get('step', 1);
 
-        // Cek apakah step sebelumnya sudah diisi
-        for ($i = 1; $i < $step; $i++) {
-            if (! session()->has("toko_step{$i}")) {
-                return redirect()->route('toko.create', ['step' => $i]);
-            }
-        }
-
-        $kategori_tokos = kategori_toko::all();
-        return view('toko.wrapper', compact('step', 'kategori_tokos'));
+    // Reset semua session jika step 1 (pendaftaran baru)
+    if ($step === 1) {
+        session()->forget([
+            'toko_step1', 'toko_step2', 'toko_step3',
+            'toko_step4', 'toko_step5'
+        ]);
     }
 
-    public function verifikasi_toko_store(Request $request, $step)
-    {
-        $step = (int) $step;
-
-        switch ($step) {
-            case 1:
-                $validated = $request->validate([
-                    'nama_toko'        => 'required|string|max:255',
-                    'kategori_toko_id' => 'required|exists:kategori_tokos,id',
-                    'no_hp_toko'       => 'required|string|max:20',
-                    'alamat_toko'      => 'required|string',
-                    'deskripsi_toko'   => 'nullable|string',
-                    'logo_toko'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
-                ]);
-
-                if ($request->hasFile('logo_toko')) {
-                    $validated['logo_toko'] = $request->file('logo_toko')->store('logo_toko_tmp', 'public');
-                }
-
-                session(['toko_step1' => $validated]);
-                break;
-
-            case 2:
-                $validated = $request->validate([
-                    'nama_ktp'  => 'required|string|max:255',
-                    'nomor_ktp' => 'required|string|max:50',
-                    'nomor_kk'  => 'required|string|max:50',
-                    'foto_ktp'  => 'required|image|mimes:jpg,jpeg,png|max:2048',
-                    'foto_kk'   => 'required|image|mimes:jpg,jpeg,png|max:2048',
-                ]);
-
-                $validated['foto_ktp'] = $request->file('foto_ktp')->store('foto_ktp_tmp', 'public');
-                $validated['foto_kk']  = $request->file('foto_kk')->store('foto_kk_tmp', 'public');
-
-                session(['toko_step2' => $validated]);
-                break;
-
-            case 3:
-                $validated = $request->validate([
-                    'nama_bank'             => 'nullable|string|max:255',
-                    'nomor_rekening'        => 'nullable|string|max:100',
-                    'nama_pemilik_rekening' => 'nullable|string|max:255',
-                ]);
-                session(['toko_step3' => $validated]);
-                break;
-
-            case 4:
-                $validated = $request->validate([
-                    'email_cs'       => 'nullable|email|max:255',
-                    'whatsapp_cs'    => 'nullable|string|max:20',
-                    'link_instagram' => 'nullable|string|max:255',
-                    'link_facebook'  => 'nullable|string|max:255',
-                    'link_tiktok'    => 'nullable|string|max:255',
-                    'link_website'   => 'nullable|string|max:255',
-                ]);
-                session(['toko_step4' => $validated]);
-                break;
-
-            case 5:
-                $validated = $request->validate([
-                    'jadwal' => 'required|array',
-                ]);
-
-                session(['toko_step5' => $validated]);
-                return $this->saveToko();
+    // Cek apakah step sebelumnya sudah diisi
+    for ($i = 1; $i < $step; $i++) {
+        if (!session()->has("toko_step{$i}")) {
+            return redirect()->route('verifikasitoko', ['step' => $i]);
         }
-
-        return redirect()->route('verifikasitoko', ['step' => $step + 1]);
     }
 
-    public function saveToko()
-    {
-        DB::beginTransaction();
-        try {
-            $step1 = session('toko_step1');
-            $step2 = session('toko_step2');
-            $step3 = session('toko_step3');
-            $step4 = session('toko_step4');
-            $step5 = session('toko_step5');
+    $kategori_tokos = kategori_toko::all();
+    return view('toko.wrapper', compact('step', 'kategori_tokos'));
+}
 
-            $last       = Toko::withoutTrashed()->orderBy('kode_toko', 'desc')->first();
-            $lastNumber = $last ? (int) substr($last->kode_toko, 2) : 0;
-            $newKode    = 'TK' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+public function verifikasi_toko_store(Request $request, $step)
+{
+    $step = (int) $step;
 
-            $toko = Toko::create([
-                'kode_toko'         => $newKode,
-                'pemilik_toko_id'   => auth()->id(),
-                'kategori_toko_id'  => $step1['kategori_toko_id'],
-                'nama_toko'         => $step1['nama_toko'],
-                'logo_toko'         => $step1['logo_toko'] ?? null,
-                'no_hp_toko'        => $step1['no_hp_toko'],
-                'alamat_toko'       => $step1['alamat_toko'],
-                'deskripsi_toko'    => $step1['deskripsi_toko'],
-                'status_aktif_toko' => 1,
-            ]);
-
-            DetailToko::create([
-                'toko_id'               => $toko->id,
-                'nama_bank'             => $step3['nama_bank'] ?? null,
-                'nomor_rekening'        => $step3['nomor_rekening'] ?? null,
-                'nama_pemilik_rekening' => $step3['nama_pemilik_rekening'] ?? null,
-                'email_cs'              => $step4['email_cs'] ?? null,
-                'whatsapp_cs'           => $step4['whatsapp_cs'] ?? null,
-                'link_instagram'        => $step4['link_instagram'] ?? null,
-                'link_facebook'         => $step4['link_facebook'] ?? null,
-                'link_tiktok'           => $step4['link_tiktok'] ?? null,
-                'link_google_maps'      => $step4['link_website'] ?? null,
-                'catatan_tambahan'      => null,
-                'nomor_ktp'             => $step2['nomor_ktp'],
-                'nomor_kk'              => $step2['nomor_kk'],
-                'nama_ktp'              => $step2['nama_ktp'],
-                'foto_ktp'              => $step2['foto_ktp'],
-                'foto_kk'               => $step2['foto_kk'],
-            ]);
-
-            foreach ($step5['jadwal'] as $hari => $data) {
-                DB::table('jam_operasionals')->insert([
-                    'toko_id'    => $toko->id,
-                    'hari'       => $hari,
-                    'buka'       => true,
-                    'jam_buka'   => $data['buka'] ?? null,
-                    'jam_tutup'  => $data['tutup'] ?? null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-
-            DB::commit();
-
+    switch ($step) {
+        case 1:
             session()->forget(['toko_step1', 'toko_step2', 'toko_step3', 'toko_step4', 'toko_step5']);
 
-            return redirect()->route('verifikasi_toko.wait')->with('success', 'Toko berhasil didaftarkan.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->route('toko.create', ['step' => 5])
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
-        }
+            $validated = $request->validate([
+                'nama_toko'        => 'required|string|max:255',
+                'kategori_toko_id' => 'required|exists:kategori_tokos,id',
+                'no_hp_toko'       => 'required|string|max:20',
+                'alamat_toko'      => 'required|string',
+                'deskripsi_toko'   => 'nullable|string',
+                'logo_toko'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
+            if ($request->hasFile('logo_toko')) {
+                $validated['logo_toko'] = $request->file('logo_toko')->store('logo_toko_tmp', 'public');
+            }
+
+            session(['toko_step1' => $validated]);
+            break;
+
+        case 2:
+            $validated = $request->validate([
+                'nama_ktp'  => 'required|string|max:255',
+                'nomor_ktp' => 'required|string|max:50',
+                'nomor_kk'  => 'required|string|max:50',
+                'foto_ktp'  => 'required|image|mimes:jpg,jpeg,png|max:2048',
+                'foto_kk'   => 'required|image|mimes:jpg,jpeg,png|max:2048',
+            ]);
+
+            $validated['foto_ktp'] = $request->file('foto_ktp')->store('foto_ktp_tmp', 'public');
+            $validated['foto_kk']  = $request->file('foto_kk')->store('foto_kk_tmp', 'public');
+
+            session(['toko_step2' => $validated]);
+            break;
+
+        case 3:
+            $validated = $request->validate([
+                'nama_bank'             => 'nullable|string|max:255',
+                'nomor_rekening'        => 'nullable|string|max:100',
+                'nama_pemilik_rekening' => 'nullable|string|max:255',
+            ]);
+            session(['toko_step3' => $validated]);
+            break;
+
+        case 4:
+            $validated = $request->validate([
+                'email_cs'       => 'nullable|email|max:255',
+                'whatsapp_cs'    => 'nullable|string|max:20',
+                'link_instagram' => 'nullable|string|max:255',
+                'link_facebook'  => 'nullable|string|max:255',
+                'link_tiktok'    => 'nullable|string|max:255',
+                'link_website'   => 'nullable|string|max:255',
+            ]);
+            session(['toko_step4' => $validated]);
+            break;
+case 5:
+    $validated = $request->validate([
+        'jadwal' => 'required|array',
+    ]);
+
+    // Validasi: minimal 1 hari memiliki jam buka dan tutup
+    $validDays = array_filter($validated['jadwal'], function ($data) {
+        return !empty($data['buka']) && !empty($data['tutup']);
+    });
+
+    if (count($validDays) === 0) {
+        return redirect()->back()->withInput()->withErrors([
+            'jadwal' => 'Minimal satu hari harus memiliki jam operasional (buka & tutup).',
+        ]);
     }
+
+    // Simpan ke session seluruh jadwal (baik kosong maupun yang terisi)
+    session(['toko_step5' => [
+        'jadwal' => $validated['jadwal'],
+    ]]);
+
+    return $this->saveToko();
+    }
+
+    return redirect()->route('verifikasitoko', ['step' => $step + 1]);
+}
+
+public function saveToko()
+{
+    DB::beginTransaction();
+    try {
+        $step1 = session('toko_step1');
+        $step2 = session('toko_step2');
+        $step3 = session('toko_step3');
+        $step4 = session('toko_step4');
+        $step5 = session('toko_step5');
+
+$lastNumber = DB::table('tokos')
+    ->where('kode_toko', 'LIKE', 'TK%')
+    ->whereRaw("SUBSTRING(kode_toko, 3) ~ '^[0-9]+$'") // pastikan setelah TK adalah angka
+    ->select(DB::raw("MAX(CAST(SUBSTRING(kode_toko, 3) AS INTEGER)) AS max_kode"))
+    ->value('max_kode');
+
+$newNumber = $lastNumber ? $lastNumber + 1 : 1;
+
+$kode_toko = 'TK' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
+
+// dd($kode_toko);
+
+
+        $toko = Toko::create([
+            'kode_toko'         => $kode_toko,
+            'pemilik_toko_id'   => auth()->id(),
+            'kategori_toko_id'  => $step1['kategori_toko_id'],
+            'nama_toko'         => $step1['nama_toko'],
+            'logo_toko'         => $step1['logo_toko'] ?? null,
+            'no_hp_toko'        => $step1['no_hp_toko'],
+            'alamat_toko'       => $step1['alamat_toko'],
+            'deskripsi_toko'    => $step1['deskripsi_toko'],
+            'status_aktif_toko' => 1,
+        ]);
+
+        DetailToko::create([
+            'toko_id'               => $toko->id,
+            'nama_bank'             => $step3['nama_bank'] ?? null,
+            'nomor_rekening'        => $step3['nomor_rekening'] ?? null,
+            'nama_pemilik_rekening' => $step3['nama_pemilik_rekening'] ?? null,
+            'email_cs'              => $step4['email_cs'] ?? null,
+            'whatsapp_cs'           => $step4['whatsapp_cs'] ?? null,
+            'link_instagram'        => $step4['link_instagram'] ?? null,
+            'link_facebook'         => $step4['link_facebook'] ?? null,
+            'link_tiktok'           => $step4['link_tiktok'] ?? null,
+            'link_google_maps'      => $step4['link_website'] ?? null,
+            'catatan_tambahan'      => null,
+            'nomor_ktp'             => $step2['nomor_ktp'],
+            'nomor_kk'              => $step2['nomor_kk'],
+            'nama_ktp'              => $step2['nama_ktp'],
+            'foto_ktp'              => $step2['foto_ktp'],
+            'foto_kk'               => $step2['foto_kk'],
+        ]);
+
+      foreach ($step5['jadwal'] as $hari => $data) {
+    if (!empty($data['buka']) && !empty($data['tutup'])) {
+        DB::table('jam_operasionals')->insert([
+            'toko_id'    => $toko->id,
+            'hari'       => $hari,
+            'buka'       => true,
+            'jam_buka'   => $data['buka'],
+            'jam_tutup'  => $data['tutup'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+}
+
+
+        DB::commit();
+        session()->forget(['toko_step1', 'toko_step2', 'toko_step3', 'toko_step4', 'toko_step5']);
+
+        return redirect()->route('verifikasi_toko.wait')->with('success', 'Toko berhasil didaftarkan.');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        dd($e->getMessage());
+        return redirect()->route('verifikasitoko', ['step' => 5])
+            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+    }
+}
+
     public function waitPage()
     {
         $user = auth()->user();
