@@ -858,7 +858,7 @@ public function GetSreachProdukFrontEnd(Request $request)
     $produkWithTagsRaw = DB::table('produks')
         ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
         ->join('kategori_tokos', 'produks.kategori_produk_id', '=', 'kategori_tokos.id')
-        ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.kategori_produk_id') // diasumsikan relasi
+        ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id') // diasumsikan relasi
         ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
         ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
         ->select(
