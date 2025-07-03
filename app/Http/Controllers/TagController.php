@@ -83,6 +83,15 @@ public function index(Request $request)
 
         try {
             // Validasi jika nama tag sudah ada di database
+            $existingkategori_produk_id = DB::connection('pgsql')->table('kategori_produks')
+                ->where('id', $request->kategori_produk_id)
+                ->exists();
+
+            if (!$existingkategori_produk_id) {
+                // Rollback transaksi jika tag sudah ada
+                DB::rollBack();
+                return redirect()->back()->with('error', 'Nama kategori "' . $request->kategori_produk_id . '" tidak ada .')->withInput();
+            }
             $existingnama_tag = DB::connection('pgsql')->table('tags')
                 ->where('nama_tag', $request->nama_tag)
                 ->exists();
@@ -142,6 +151,7 @@ public function index(Request $request)
                 'nama_tag' => $request->nama_tag,
                 'deskripsi_tag' => $request->deskripsi_tag,
                 'gambar_tag' => $gambar,  // Simpan nama file gambar
+                'kategori_produk_id' => $request->kategori_produk_id,  // Simpan nama file gambar
                 'created_at' => \Carbon\Carbon::now(), // Menetapkan created_at dengan waktu saat ini
             ]);
 

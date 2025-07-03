@@ -273,14 +273,40 @@ public function show($kode_kategori_produk)
             return redirect()->route('kategori_produk.index')->with('error', 'Terjadi kesalahan dalam menghapus kategori_produk.');
         }
     }
-  public function detail_kategori_produk($nama_kategori_produk)
+ public function detail_kategori_toko($nama_kategori_toko)
 {
-    $kode_kategori_produk = request()->query('kode');
+    // Mengambil kode kategori dari query string
+    $kode_kategori_toko = request()->query('kategori');
 
-    $kategori = KategoriProduk::where('kode_kategori_produk', $kode_kategori_produk)->firstOrFail();
+    // Memastikan kode kategori ada
+    if (!$kode_kategori_toko) {
+        abort(404, 'Kode Kategori Toko tidak ditemukan');
+    }
 
-            return view("frontend.detail_kategori_produk",compact('kategori'));
+    // Mengambil data kategori toko berdasarkan kode
+    $kategori_toko = kategori_toko::where('kode_kategori_toko', $kode_kategori_toko)->firstOrFail();
 
+    // Mengambil produk yang terkait dengan kategori toko ini
+    $sub_kategori = KategoriProduk::where('kategori_toko_id', $kategori_toko->id)->get();
+    // dd($sub_kategori);
+    // Mengirim data kategori_toko dan sub_kategori ke view
+    return view('frontend.detail_kategori_toko', compact('kategori_toko', 'sub_kategori'));
 }
+public function detail_kategori_produk($nama_kategori_toko, $nama_kategori_produk)
+{
+    $kode_kategori_toko = request()->query('kode_toko');
+    $kode_kategori_produk = request()->query('kode_produk');
+
+    $kategori_toko = kategori_toko::where('kode_kategori_toko', $kode_kategori_toko)->firstOrFail();
+    $kategori_produk = KategoriProduk::where('kode_kategori_produk', $kode_kategori_produk)->firstOrFail();
+
+    // Ambil sub-kategori (jika ada struktur parent-child)
+    $sub_kategori = KategoriProduk::where('id', $kategori_produk->id)->get();
+
+    return view('frontend.detail_kategori_produk', compact('kategori_produk', 'kategori_toko', 'sub_kategori'));
+}
+
+
+
 
 }

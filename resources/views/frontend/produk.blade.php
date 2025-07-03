@@ -9,7 +9,6 @@
                 <div class="col-12 d-flex flex-wrap justify-content-between align-items-center">
                     <h2 class="section-title mb-0">Category</h2>
                     <div class="d-flex align-items-center">
-                        <a href="#" class="btn-link text-decoration-none me-3">View All Categories →</a>
                         <div class="swiper-buttons">
                             <button class="swiper-prev category-carousel-prev btn btn-yellow">❮</button>
                             <button class="swiper-next category-carousel-next btn btn-yellow">❯</button>
@@ -37,9 +36,9 @@
 @section('js_content_frontend')
     <script>
         // URL SSE dan route template
-        const sseUrl = "{{ route('frontend.GetKategoriFrontEnd') }}";
+        const sseUrl = "{{ route('frontend.GetKategoriTokoFrontEnd') }}";
         const routeKategoriTemplate =
-        "{{ route('frontend.detail_kategori', ['nama_kategori' => 'KATEGORI_PLACEHOLDER']) }}";
+        "{{ route('frontend.detail_kategori_toko', ['nama_kategori_toko' => 'KATEGORI_PLACEHOLDER']) }}";
 
         // Buka koneksi SSE
         const eventSource = new EventSource(sseUrl);
@@ -50,14 +49,14 @@
             container.innerHTML = '';
 
             kategoriData.forEach((item, index) => {
-                const gambar = item.gambar_url || '/storage/' + item.gambar_kategori;
+                const gambar = item.gambar_url || '/storage/' + item.gambar_kategori_toko;
                 const linkKategori =
-                    `/kategori/${encodeURIComponent(item.nama_kategori)}?kode=${encodeURIComponent(item.kode_kategori)}`;
+                    `/kategori/${encodeURIComponent(item.nama_kategori_toko)}?kategori=${encodeURIComponent(item.kode_kategori_toko)}`;
 
                 const kategoriHTML = `
                 <a href="${linkKategori}" class="nav-link category-item swiper-slide text-center">
-                    <img src="${gambar}" alt="${item.nama_kategori}" class="img-fluid mb-2" style="max-height: 150px;">
-                    <h3 class="category-title">${item.nama_kategori}</h3>
+                    <img src="${gambar}" alt="${item.nama_kategori_toko}" class="img-fluid mb-2" style="max-height: 150px;">
+                    <h3 class="category-title">${item.nama_kategori_toko}</h3>
                 </a>
             `;
                 container.insertAdjacentHTML('beforeend', kategoriHTML);
@@ -322,11 +321,11 @@
                                 <!-- Produk akan dimuat secara dinamis melalui SSE -->
                             </div>
 
-                            <meta name="csrf-token" content="{{ csrf_token() }}">
-                            <meta name="base-url" content="{{ url('/') }}">
-
                             <script>
                                 const productGrid = document.getElementById('product-grid');
+                                const searchForm = document.querySelector('.search-form');
+                                const searchInput = document.getElementById('search-input');
+
                                 const formatRupiah = (number) => {
                                     return new Intl.NumberFormat('id-ID', {
                                         style: 'currency',
@@ -335,80 +334,114 @@
                                     }).format(number);
                                 };
 
-                                // Render produk dan pasang event handler setelah render
+                                let allProducts = [];
+
                                 const renderProducts = (products) => {
                                     productGrid.innerHTML = '';
                                     products.forEach(item => {
                                         const diskonBadge = item.diskon > 0 ?
-                                            `<span class="badge bg-success position-absolute m-3">-${item.diskon}%</span>` :
-                                            '';
+                                            `<span class="badge bg-success position-absolute m-3">-${item.diskon}%</span>` : '';
                                         const tags = item.tags && item.tags.length ?
-                                            `<div class="mt-1 small text-muted">Tags: ${item.tags.join(', ')}</div>` :
-                                            '';
-                                        const linkDetailProduk =
-                                            `detail/${encodeURIComponent(item.nama_produk)}?kode=${encodeURIComponent(item.kode_produk)}`;
+                                            `<div class="mt-1 small text-muted">Tags: ${item.tags.join(', ')}</div>` : '';
+                                        const linkDetailProduk = `detail/${encodeURIComponent(item.nama_produk)}?kode=${encodeURIComponent(item.kode_produk)}`;
                                         const html = `
-                                                <div class="col">
-                                                    <div class="product-item text-decoration-none text-dark" style="cursor:pointer;">
-                                                        <a href="{{ asset('${linkDetailProduk}') }}" style="text-decoration: none;">
-                                                            ${diskonBadge}
-                                                            <span class="btn-wishlist">
-                                                                <svg width="24" height="24"><use xlink:href="#heart"></use></svg>
+                                            <div class="col">
+                                                <div class="product-item text-decoration-none text-dark" style="cursor:pointer;">
+                                                    <a href="{{ asset('${linkDetailProduk}') }}" style="text-decoration: none;">
+                                                        ${diskonBadge}
+                                                        <span class="btn-wishlist">
+                                                            <svg width="24" height="24"><use xlink:href="#heart"></use></svg>
+                                                        </span>
+                                                        <figure>
+                                                            <img src="{{ asset('storage/${item.gambar_produk}') }}" class="tab-image" alt="${item.nama_produk}">
+                                                        </figure>
+                                                        <h3>${item.nama_produk}</h3>
+                                                        <span class="rating">
+                                                            <svg width="24" height="24" class="text-primary"><use xlink:href="#star-solid"></use></svg> 4.5
+                                                        </span>
+                                                        <span class="price">${formatRupiah(item.harga_produk)}</span>
+                                                    </a>
+                                                    <div class="d-flex align-items-center justify-content-between mt-2">
+                                                        <div class="input-group product-qty">
+                                                            <span class="input-group-btn">
+                                                                <button type="button" class="quantity-left-minus btn btn-danger btn-number" data-type="minus">
+                                                                    <svg width="16" height="16"><use xlink:href="#minus"></use></svg>
+                                                                </button>
                                                             </span>
-                                                            <figure>
-                                                                <img src="{{ asset('storage/${item.gambar_produk}') }}" class="tab-image" alt="${item.nama_produk}">
-                                                            </figure>
-                                                            <h3>${item.nama_produk}</h3>
-                                                            <span class="rating">
-                                                                <svg width="24" height="24" class="text-primary"><use xlink:href="#star-solid"></use></svg> 4.5
+                                                            <input type="text" name="quantity" class="form-control input-number" value="1">
+                                                            <span class="input-group-btn">
+                                                                <button type="button" class="quantity-right-plus btn btn-success btn-number" data-type="plus">
+                                                                    <svg width="16" height="16"><use xlink:href="#plus"></use></svg>
+                                                                </button>
                                                             </span>
-                                                            <span class="price">${formatRupiah(item.harga_produk)}</span>
-                                                        </a>
-                                                        <div class="d-flex align-items-center justify-content-between mt-2">
-                                                            <div class="input-group product-qty">
-                                                                <span class="input-group-btn">
-                                                                    <button type="button" class="quantity-left-minus btn btn-danger btn-number" data-type="minus">
-                                                                        <svg width="16" height="16"><use xlink:href="#minus"></use></svg>
-                                                                    </button>
-                                                                </span>
-                                                                <input type="text" name="quantity" class="form-control input-number" value="1">
-                                                                <span class="input-group-btn">
-                                                                    <button type="button" class="quantity-right-plus btn btn-success btn-number" data-type="plus">
-                                                                        <svg width="16" height="16"><use xlink:href="#plus"></use></svg>
-                                                                    </button>
-                                                                </span>
-                                                            </div>
-                                                            <span class="nav-link add-to-cart-btn" style="cursor:pointer;">Add to Cart <iconify-icon icon="uil:shopping-cart"></iconify-icon></span>
                                                         </div>
-                                                        ${tags}
+                                                        <span class="nav-link add-to-cart-btn" style="cursor:pointer;">Add to Cart <iconify-icon icon="uil:shopping-cart"></iconify-icon></span>
                                                     </div>
+                                                    ${tags}
                                                 </div>
-                                            `;
+                                            </div>
+                                        `;
                                         productGrid.insertAdjacentHTML('beforeend', html);
                                     });
-                                    // Pasang event handler qty dan add to cart setelah render
                                     setupProductEvents();
                                 };
 
-                                // SSE produk
+                                // Ambil data awal dari SSE
                                 const evtSource = new EventSource("{{ route('frontend.GetProdukFrontEnd') }}");
-                                evtSource.onmessage = function(event) {
+                                evtSource.onmessage = function (event) {
                                     const data = JSON.parse(event.data);
                                     if (data.status === 'success') {
-                                        renderProducts(data.produk);
+                                        allProducts = data.produk;
+                                        renderProducts(allProducts);
                                     } else {
                                         console.error("Error fetching products:", data.message);
                                     }
                                 };
-                                evtSource.onerror = function(err) {
+                                evtSource.onerror = function (err) {
                                     console.error("SSE connection error:", err);
                                 };
 
-                                // --- Cart Logic ---
-                                document.addEventListener('DOMContentLoaded', function() {
+                                // Filter hanya saat tombol search diklik
+                                searchForm.addEventListener('submit', function (e) {
+                                    e.preventDefault(); // stop form default
+                                    const keyword = searchInput.value.toLowerCase().trim();
+                                const filtered = allProducts.filter(item => {
+                                        const keywordLower = keyword.toLowerCase();
+
+                                        const namaProduk = item.nama_produk?.toLowerCase() || '';
+                                        const deskripsiProduk = item.deskripsi_produk?.toLowerCase() || '';
+                                        const namaToko = item.toko?.nama_toko?.toLowerCase() || '';
+                                        const deskripsiToko = item.toko?.deskripsi_toko?.toLowerCase() || '';
+                                        const namaKategoriToko = item.kategori_toko?.nama_kategori_toko?.toLowerCase() || '';
+                                        const deskripsiKategoriToko = item.kategori_toko?.deskripsi_kategori_toko?.toLowerCase() || '';
+                                        const namaKategoriProduk = item.kategori_produk?.nama_kategori_produk?.toLowerCase() || '';
+                                        const deskripsiKategoriProduk = item.kategori_produk?.deskripsi_kategori_produk?.toLowerCase() || '';
+                                        const tagMatch = item.tags?.some(tag =>
+                                            (tag.nama_tag?.toLowerCase() || '').includes(keywordLower) ||
+                                            (tag.deskripsi_tag?.toLowerCase() || '').includes(keywordLower)
+                                        ) || false;
+
+                                        return (
+                                            namaProduk.includes(keywordLower) ||
+                                            deskripsiProduk.includes(keywordLower) ||
+                                            namaToko.includes(keywordLower) ||
+                                            deskripsiToko.includes(keywordLower) ||
+                                            namaKategoriToko.includes(keywordLower) ||
+                                            deskripsiKategoriToko.includes(keywordLower) ||
+                                            namaKategoriProduk.includes(keywordLower) ||
+                                            deskripsiKategoriProduk.includes(keywordLower) ||
+                                            tagMatch
+                                        );
+                                    });
+
+                                    renderProducts(filtered);
+                                });
+
+                                // Setup cart & event handler
+                                document.addEventListener('DOMContentLoaded', function () {
                                     const cartBtn = document.getElementById('cartDropdownBtn');
                                     const cartCard = document.getElementById('cartDropdownCard');
-                                    // --- Animate to Cart ---
+
                                     function animateToCart(img, startRect, endRect) {
                                         const flyingImg = img.cloneNode(true);
                                         flyingImg.style.position = 'fixed';
@@ -434,35 +467,34 @@
                                         }, 700);
                                     }
 
-                                    // --- Setup product events (qty & add to cart) ---
-                                    window.setupProductEvents = function() {
+                                    window.setupProductEvents = function () {
                                         document.querySelectorAll('.product-item').forEach(product => {
                                             const minusBtn = product.querySelector('.quantity-left-minus');
                                             const plusBtn = product.querySelector('.quantity-right-plus');
                                             const qtyInput = product.querySelector('input[name="quantity"]');
                                             if (qtyInput && minusBtn && plusBtn) {
-                                                minusBtn.addEventListener('click', function(e) {
+                                                minusBtn.addEventListener('click', function (e) {
                                                     e.preventDefault();
                                                     let currentQty = parseInt(qtyInput.value) || 1;
                                                     if (currentQty > 1) {
                                                         qtyInput.value = currentQty - 1;
                                                     }
                                                 });
-                                                plusBtn.addEventListener('click', function(e) {
+                                                plusBtn.addEventListener('click', function (e) {
                                                     e.preventDefault();
                                                     let currentQty = parseInt(qtyInput.value) || 1;
                                                     qtyInput.value = currentQty + 1;
                                                 });
-                                                qtyInput.addEventListener('input', function() {
+                                                qtyInput.addEventListener('input', function () {
                                                     this.value = this.value.replace(/[^0-9]/g, '');
                                                     if (this.value === '' || parseInt(this.value) < 1) {
                                                         this.value = 1;
                                                     }
                                                 });
                                             }
-                                            // Add to Cart button
+
                                             const addToCartBtn = product.querySelector('.add-to-cart-btn');
-                                            addToCartBtn.addEventListener('click', function(e) {
+                                            addToCartBtn.addEventListener('click', function (e) {
                                                 e.preventDefault();
                                                 const baseUrl = document.querySelector('meta[name="base-url"]').content;
                                                 const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
@@ -472,10 +504,7 @@
                                                     window.location.href = `${baseUrl}/login?redirect=${returnUrl}`;
                                                     return;
                                                 }
-                                                const name = product.querySelector('h3').textContent.trim();
-                                                const price = parseInt(product.querySelector('.price').textContent.replace(/[^0-9]/g, ''));
-                                                const qtyInput = product.querySelector('input[name="quantity"]');
-                                                const qty = parseInt(qtyInput?.value) || 1;
+                                                const qty = parseInt(product.querySelector('input[name="quantity"]')?.value) || 1;
                                                 const kodeProduk = new URL(product.querySelector('a').href).searchParams.get('kode');
                                                 const img = product.querySelector('img');
                                                 if (!kodeProduk) {
@@ -492,13 +521,11 @@
                                                         kode_produk: kodeProduk,
                                                         quantity: qty
                                                     },
-                                                    success: function(response) {
+                                                    success: function (response) {
                                                         if (response.status === 'success' || response.status === 'exists') {
-                                                            // Animasi ke cart
                                                             const imgRect = img.getBoundingClientRect();
                                                             const cartRect = cartBtn.getBoundingClientRect();
                                                             animateToCart(img, imgRect, cartRect);
-                                                            // Reload keranjang (cart dropdown) agar tampil sesuai format
                                                             window.cartLoaded = false;
                                                             if (typeof loadCartData === 'function') {
                                                                 loadCartData(true);
@@ -507,7 +534,7 @@
                                                             alert(response.message || 'Gagal menambahkan ke keranjang.');
                                                         }
                                                     },
-                                                    error: function(xhr) {
+                                                    error: function (xhr) {
                                                         console.error(xhr.responseText);
                                                         alert('Terjadi kesalahan saat mengirim ke server.');
                                                     }
@@ -517,6 +544,8 @@
                                     };
                                 });
                             </script>
+
+
                         </div>
                     </div>
                 </div>

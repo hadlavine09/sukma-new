@@ -46,21 +46,20 @@
             <li><a class="treeview-item" href="{{ route('produk.index')}}"><i class="icon bi bi-circle-fill"></i> Produk</a></li>
         </ul>
         </li>
-        <li class="treeview"><a class="app-menu__item" href="{{ asset('assets_backend/#')}}" data-toggle="treeview"><i class="app-menu__icon bi bi-ui-checks"></i><span class="app-menu__label">Manajemen Transaksi</span><i class="treeview-indicator bi bi-chevron-right"></i></a>
-        <ul class="treeview-menu">
-            <li><a class="treeview-item" href="{{ route('cart.index')}}"><i class="icon bi bi-circle-fill"></i> Keranjang</a></li>
-            <li><a class="treeview-item" href="#"><i class="icon bi bi-circle-fill"></i> Checkout</a></li>
-            <li><a class="treeview-item" href="{{ route('produk.index')}}"><i class="icon bi bi-circle-fill"></i> Transaksi</a></li>
-        </ul>
-        </li>
-        <li class="treeview"><a class="app-menu__item" href="{{ asset('assets_backend/#')}}" data-toggle="treeview"><i class="app-menu__icon bi bi-ui-checks"></i><span class="app-menu__label">Manajemen Material</span><i class="treeview-indicator bi bi-chevron-right"></i></a>
-        <ul class="treeview-menu">
+        {{-- <li class="treeview"><a class="app-menu__item" href="{{ asset('assets_backend/#')}}" data-toggle="treeview"><i class="app-menu__icon bi bi-ui-checks"></i><span class="app-menu__label">Manajemen Material</span><i class="treeview-indicator bi bi-chevron-right"></i></a>
+            <ul class="treeview-menu">
             <li><a class="treeview-item" href="{{ route('material.index')}}"><i class="icon bi bi-circle-fill"></i> Material</a></li>
             <li><a class="treeview-item" href="{{ route('supplier.index')}}"><i class="icon bi bi-circle-fill"></i> Supplier</a></li>
             <li><a class="treeview-item" href="{{ route('transaksi_material.index')}}"><i class="icon bi bi-circle-fill"></i> Transaksi</a></li>
         </ul>
-        </li>
+    </li> --}}
     @endif
+    <li class="treeview"><a class="app-menu__item" href="{{ asset('assets_backend/#')}}" data-toggle="treeview"><i class="app-menu__icon bi bi-ui-checks"></i><span class="app-menu__label">Manajemen Transaksi</span><i class="treeview-indicator bi bi-chevron-right"></i></a>
+    <ul class="treeview-menu">
+        <li><a class="treeview-item" href="{{ route('produk.index')}}"><i class="icon bi bi-circle-fill"></i> Transaksi</a></li>
+        <li><a class="treeview-item" href="{{ route('produk.index')}}"><i class="icon bi bi-circle-fill"></i> Laporan</a></li>
+    </ul>
+    </li>
 
   </ul>
 </aside>

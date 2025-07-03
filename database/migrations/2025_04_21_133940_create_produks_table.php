@@ -19,12 +19,14 @@ return new class extends Migration
             $table->unsignedInteger('stok_produk')->default(0);
             $table->string('harga_produk');
             $table->string('gambar_produk')->nullable();
-            $table->unsignedBigInteger('kategori_toko_id');
+            $table->unsignedBigInteger('kategori_produk_id');
+            $table->unsignedBigInteger('toko_id');
             $table->enum('status_produk', ['publik', 'private'])->default('private');
             $table->enum('status_draf_produk', ['Aktif', 'Tidak Aktif'])->default('Aktif');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('kategori_toko_id')->references('id')->on('kategori_tokos')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('kategori_produk_id')->references('id')->on('kategori_produks')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('toko_id')->references('id')->on('tokos')->onUpdate('cascade')->onDelete('cascade');
 
         });
     }

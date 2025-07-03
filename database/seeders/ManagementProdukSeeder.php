@@ -136,5 +136,6 @@ class ManagementProdukSeeder extends Seeder
             'updated_at' => Carbon::now(),
         ];
         DB::table('izin_tokos')->insert($izin);
+
     }
 }

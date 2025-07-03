@@ -25,9 +25,9 @@ class CartController extends Controller
     {
         $keranjang = DB::table('carts')
             ->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')
-            ->join('kategoris', 'produks.kode_kategori', '=', 'kategoris.kode_kategori')
+            ->join('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
             ->where('carts.user_id', Auth::user()->id)
-            ->select('carts.*', 'produks.nama_produk', 'produks.gambar_produk', 'produks.kode_kategori', 'kategoris.nama_kategori')
+            ->select('carts.*', 'produks.nama_produk', 'produks.gambar_produk', 'produks.kategori_produk_id', 'kategori_produks.nama_kategori_produk')
             ->get();
         // dd($keranjang); // Hapus saat production
         return view('frontend.keranjang', compact('keranjang'));

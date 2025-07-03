@@ -88,7 +88,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/Home', function () {
             return view('frontend.produk');
         });
-        Route::get('/kategori/{nama_kategori}', [KategoriProdukController::class, 'detail_kategori'])->name('frontend.detail_kategori');
+        Route::get('/kategori/{nama_kategori_toko}', [KategoriProdukController::class, 'detail_kategori_toko'])->name('frontend.detail_kategori_toko');
+        Route::get('/kategori/{nama_kategori_toko}/{nama_kategori_produk}', [KategoriProdukController::class, 'detail_kategori_produk'])->name('frontend.detail_kategori_produk');
         Route::get('/detail/{nama_produk}', [DetailProdukController::class, 'detailproduk'])->name('frontend.detailproduk');
         Route::post('tambahkeranjang', [CartController::class, 'tambahkeranjang'])->name('frontend.tambahkeranjang');
         Route::get('keranjang', [CartController::class, 'keranjang'])->name('frontend.keranjang');
@@ -200,6 +201,8 @@ Route::prefix('manajemen-produk')->group(function () {
 
 
     Route::prefix('produk')->group(function () {
+        Route::post('/produk/tagkategori', [ProdukController::class, 'tagkategori'])->name('produk.tagkategori');
+
         Route::get('/', [ProdukController::class, 'index'])->name('produk.index');
         Route::get('create', [ProdukController::class, 'create'])->name('produk.create');
         Route::post('store', [ProdukController::class, 'store'])->name('produk.store');
@@ -281,8 +284,10 @@ Route::prefix('Manajemen-Transaksi')->group(function () {
 Route::prefix('FrontEnd')->group(function () {
     Route::get('GetTagFrontEnd', [ProdukController::class, 'GetTagFrontEnd'])->name('frontend.GetTagFrontEnd');
     Route::get('GetTagFrontEnd', [ProdukController::class, 'GetTagFrontEnd'])->name('frontend.GetTagFrontEnd');
-    Route::get('GetKategoriFrontEnd', [ProdukController::class, 'GetKategoriFrontEnd'])->name('frontend.GetKategoriFrontEnd');
+    Route::get('GetKategoriTokoFrontEnd', [ProdukController::class, 'GetKategoriTokoFrontEnd'])->name('frontend.GetKategoriTokoFrontEnd');
+    Route::get('GetKategoriProdukFrontEnd', [ProdukController::class, 'GetKategoriProdukFrontEnd'])->name('frontend.GetKategoriProdukFrontEnd');
     Route::get('GetProdukFrontEnd', [ProdukController::class, 'GetProdukFrontEnd'])->name('frontend.GetProdukFrontEnd');
+    Route::get('GetSreachProdukFrontEnd', [ProdukController::class, 'GetSreachProdukFrontEnd'])->name('frontend.GetSreachProdukFrontEnd');
     Route::get('GetKeranjangFrontEnd', [ProdukController::class, 'GetKeranjangFrontEnd'])->name('frontend.GetKeranjangFrontEnd');
     Route::get('GetProdukDetailKategoriFrontEnd', [ProdukController::class, 'GetProdukDetailKategoriFrontEnd'])->name('frontend.GetProdukDetailKategoriFrontEnd');
     Route::get('GetDetailProdukFrontEnd', [ProdukController::class, 'GetDetailProdukFrontEnd'])->name('frontend.GetDetailProdukFrontEnd');

@@ -19,9 +19,10 @@
                 <div class="tile-body">
                     <form>
                         @csrf
+
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">No Produk</label>
+                                <label class="form-label">Kode Produk</label>
                                 <input type="text" class="form-control" value="{{ $produkDetail->kode_produk }}" readonly>
                             </div>
                             <div class="col-md-6">
@@ -33,7 +34,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Harga Produk</label>
-                                <input type="text" class="form-control" value="Rp {{ number_format($produkDetail->harga_produk, 2, ',', '.') }}" readonly>
+                                <input type="text" class="form-control" value="Rp {{ number_format($produkDetail->harga_produk, 0, ',', '.') }}" readonly>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Stok Produk</label>
@@ -44,7 +45,7 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label class="form-label">Deskripsi Produk</label>
-                                <textarea class="form-control" id="deskripsi_produk" rows="2" readonly>{{ $produkDetail->deskripsi_produk }}</textarea>
+                                <textarea class="form-control" id="deskripsi_produk" rows="3" readonly>{{ $produkDetail->deskripsi_produk }}</textarea>
                             </div>
                         </div>
 
@@ -80,17 +81,16 @@
                             <div class="col-md-6">
                                 <label class="form-label">Waktu Diupdate</label>
                                 <input type="text" class="form-control"
-                                       value="{{ $produkDetail->updated_at ? \Carbon\Carbon::parse($produkDetail->updated_at)->format('d M Y, H:i') : '-' }}"
-                                       readonly>
+                                    value="{{ $produkDetail->updated_at ? \Carbon\Carbon::parse($produkDetail->updated_at)->format('d M Y, H:i') : '-' }}"
+                                    readonly>
                             </div>
                         </div>
 
-                        <!-- Display Tags -->
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label class="form-label">Tags</label>
                                 @if(count($tags) > 0)
-                                    <ul>
+                                    <ul class="mb-0 ps-3">
                                         @foreach($tags as $tag)
                                             <li>{{ $tag }}</li>
                                         @endforeach
@@ -106,6 +106,7 @@
                                 <i class="bi bi-arrow-left"></i> Kembali
                             </a>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -118,13 +119,8 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const textarea = document.getElementById("deskripsi_produk");
-
-        function resizeTextarea() {
-            textarea.style.height = "auto";
-            textarea.style.height = textarea.scrollHeight + "px";
-        }
-
-        resizeTextarea();
+        textarea.style.height = "auto";
+        textarea.style.height = textarea.scrollHeight + "px";
     });
 </script>
 @endsection

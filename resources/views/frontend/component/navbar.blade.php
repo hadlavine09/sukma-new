@@ -13,7 +13,7 @@
             <form action="#" method="GET" class="search-form" role="search" aria-label="Product search form"
                 onsubmit="return false;">
                 <div class="search-input-wrapper">
-                    <input type="text" name="q" id="search-input" placeholder="Cari produk, brand, dan lainnya"
+                    <input type="text" name="searchInput" id="search-input" placeholder="Cari produk, brand, dan lainnya"
                         autocomplete="off" aria-autocomplete="list" aria-controls="search-suggestions"
                         aria-expanded="false" />
                     <button type="submit" aria-label="Search">

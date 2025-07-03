@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Tag;
+use App\Models\Toko;
+use App\Models\kategori_toko;
 use App\Models\Produk;
 use Illuminate\Http\Request;
 use App\Models\KategoriProduk;
@@ -19,8 +21,10 @@ class ProdukController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            // Ambil data produk
-            $produk = Produk::all(); // Bisa diganti dengan query yang lebih kompleks, misalnya dengan filter atau pagination
+            // Ambil data
+                    $login = Auth::user()->id;
+        $toko = DB::table('tokos')->where('pemilik_toko_id', $login)->first();
+            $produk = Produk::where('toko_id',$toko->id); // Bisa diganti dengan query yang lebih kompleks, misalnya dengan filter atau pagination
 
             return DataTables::of($produk)
                 ->addIndexColumn()
@@ -61,21 +65,48 @@ class ProdukController extends Controller
      */
     public function create()
     {
-        $kategori = KategoriProduk::getSemuaKategori();
+        $login = Auth::user()->id;
+        $toko = DB::table('tokos')->where('pemilik_toko_id', $login)->first();
+        $kategori = DB::table('kategori_produks')->where('kategori_toko_id',$toko->kategori_toko_id)->get();
         return view('backend.manajementproduk.produk.create',compact('kategori'));
     }
+   public function tagkategori(Request $request)
+    {
+        $kategori_id = $request->input('kategori_id');
+
+        // Validasi apakah kategori ada
+        $cek_kategori = KategoriProduk::where('id',$kategori_id);
+
+        if (!$cek_kategori) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kategori tidak ditemukan.'
+            ], 404);
+        }
+        // Ambil data tag yang terkait dengan kategori
+        $tags = DB::table('tags')
+            ->where('tags.kategori_produk_id', $kategori_id)
+            ->join('kategori_produks', 'tags.kategori_produk_id', '=', 'kategori_produks.id')
+            ->select('tags.*', 'kategori_produks.nama_kategori_produk')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data tag berhasil diambil.',
+            'data' => $tags
+        ]);
+    }
+
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+public function store(Request $request)
 {
-    // Start a database transaction
     DB::beginTransaction();
 
     try {
-        // Helper: Redirect with rollback and error
-        $redirectWithError = function ($message) use ($request) {
+        $redirectWithError = function ($message) {
             DB::rollBack();
             return redirect()->back()->with('error', $message)->withInput();
         };
@@ -97,7 +128,6 @@ class ProdukController extends Controller
         if (!is_numeric($request->stok_produk) || $request->stok_produk < 1) {
             return $redirectWithError('Stok produk tidak boleh kosong atau kurang dari 1.');
         }
-
         if (!is_numeric($request->harga_produk) || $request->harga_produk < 1) {
             return $redirectWithError('Harga produk tidak boleh kosong atau kurang dari 1.');
         }
@@ -107,68 +137,87 @@ class ProdukController extends Controller
             return $redirectWithError('Gambar produk wajib diunggah.');
         }
 
-        $ext = $request->file('gambar_produk')->extension();
-        if (!in_array($ext, ['jpg', 'jpeg', 'png'])) {
+        $gambarFile = $request->file('gambar_produk');
+        $mime = $gambarFile->getMimeType();
+
+        if (!in_array($mime, ['image/jpeg', 'image/png', 'image/jpg'])) {
             return $redirectWithError('File gambar harus berupa JPG, JPEG, atau PNG.');
         }
-
-        // Validasi kategori
-        $kategoriAda = DB::connection('pgsql')->table('kategoris')
-            ->where('kode_kategori', $request->kode_kategori)
+        // Validasi kategori (kategori_id dari form)
+        $kategoriAda = DB::connection('pgsql')->table('kategori_produks')
+            ->where('id', $request->kategori_id)
             ->exists();
         if (!$kategoriAda) {
             return $redirectWithError('Kategori tidak ditemukan.');
         }
 
-        // Validasi tags
-        foreach ($request->tags as $tag) {
+        // Validasi tags (kode_tag dari form, array)
+        if (!is_array($request->kode_tag)) {
+            return $redirectWithError('Tag harus berupa array.');
+        }
+
+        foreach ($request->kode_tag as $tag) {
             $cekTag = DB::connection('pgsql')->table('tags')
-                ->where('kode_tag', $tag)
+                ->where('id', $tag)
                 ->exists();
             if (!$cekTag) {
                 return $redirectWithError('Tag "' . $tag . '" tidak ditemukan.');
             }
         }
 
-        // // Validasi status produk
-        // $status = $request->status_produk;
-        // if (!in_array($status, ['Aktif', 'Tidak Aktif'])) {
-        //     return $redirectWithError('Status produk wajib dipilih dan hanya boleh "Aktif" atau "Tidak Aktif".');
-        // }
-
         // Generate kode produk
-        $kode_produk = 'PRD-' . strtoupper(uniqid());
+        // Ambil produk terakhir berdasarkan kode
+        $lastProduk = Produk::orderBy('kode_produk', 'desc')->first();
+
+        // Jika belum ada produk, mulai dari PRD000
+        $lastKode = $lastProduk ? $lastProduk->kode_produk : 'PRD000';
+
+        // Ambil angka dari kode terakhir, contoh PRD007 → 7
+        $lastNumber = (int) substr($lastKode, 3);
+
+        // Tambahkan 1 untuk kode baru
+        $newNumber = $lastNumber + 1;
+
+        // Buat kode baru dengan format PRD diikuti angka 3 digit
+        $kode_produk = 'PRD' . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
 
         // Upload gambar
         if (!Storage::disk('public')->exists('produk')) {
             Storage::disk('public')->makeDirectory('produk');
         }
 
-        $gambar = $request->file('gambar_produk')->store('produk', 'public');
+        $gambarPath = $gambarFile->store('produk', 'public');
 
+        // Ambil ID user yang login
+        $user_login = Auth::id();
+
+        // Ambil data toko berdasarkan pemilik
+        $toko = Toko::where('pemilik_toko_id', $user_login)->first();
+
+        if (!$toko) {
+            return redirect()->back()->with('error', 'Toko milik pengguna tidak ditemukan.');
+        }
         // Simpan produk
         $save_produk = Produk::create([
             'kode_produk'      => $kode_produk,
             'nama_produk'      => $request->nama_produk,
+            'toko_id'          => $toko->id,
             'deskripsi_produk' => $request->deskripsi_produk,
             'stok_produk'      => $request->stok_produk,
             'harga_produk'     => $request->harga_produk,
-            'gambar_produk'    => $gambar,
-            'kode_kategori'    => $request->kode_kategori,
-            // 'status_produk'    => $status,
+            'gambar_produk'    => $gambarPath,
+            'kategori_produk_id'  => $request->kategori_id, // di sini ganti ke 'kategori_id'
         ]);
 
-        // Simpan tag produk
-        foreach ($request->tags as $tag) {
+        // Simpan relasi tag
+        foreach ($request->kode_tag as $tag) {
             DB::table('tag_produks')->insert([
-                'kode_tag'    => $tag,
-                'kode_produk' => $save_produk->kode_produk,
+                'tag_id'    => $tag,
+                'produk_id' => $save_produk->id,
             ]);
         }
 
-        // Commit transaksi
         DB::commit();
-
         return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan!');
     } catch (\Exception $e) {
         DB::rollBack();
@@ -181,234 +230,186 @@ class ProdukController extends Controller
 
 
 
+
     /**
      * Display the specified resource.
      */
-    public function show($kode_produk)
-    {
-        // Get the product and related category
-        $produk = DB::table('produks')
-            ->join('kategoris', 'produks.kode_kategori', '=', 'kategoris.kode_kategori')
-            ->leftJoin('tag_produks', 'produks.kode_produk', '=', 'tag_produks.kode_produk')
-            ->leftJoin('tags', 'tag_produks.kode_tag', '=', 'tags.kode_tag')
-            ->where('produks.kode_produk', $kode_produk)
-            ->select('produks.*', 'kategoris.nama_kategori', 'tags.nama_tag') // Select product, category, and tag name
-            ->get();
+ public function show($id)
+{
+    // Ambil detail produk berdasarkan kode_produk
+    $produk = DB::table('produks')
+        ->join('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
+        ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+        ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+        ->where('produks.kode_produk', $id)
+        ->select(
+            'produks.*',
+            'kategori_produks.nama_kategori_produk as nama_kategori',
+            'tags.nama_tag'
+        )
+        ->get();
 
-        // Check if the product exists
-        if ($produk->isEmpty()) {
-            return redirect()->back()->with('error', 'Data produk tidak ditemukan.');
-        }
-
-        // Get the first product's details (there will only be one product since we are filtering by 'kode_produk')
-        $produkDetail = $produk->first(); // Get the first product
-
-        // Group the tags associated with the product
-        $tags = $produk->pluck('nama_tag')->toArray(); // Pluck all the tags' names
-
-        // Pass the product and tags to the view
-        return view('backend.manajementproduk.produk.show', compact('produkDetail', 'tags'));
+    // Cek apakah produk ditemukan
+    if ($produk->isEmpty()) {
+        return redirect()->route('produk.index')->with('error', 'Produk tidak ditemukan.');
     }
 
+    // Ambil data produk utama
+    $produkDetail = $produk->first();
+
+    // Ambil semua nama tag
+    $tags = $produk->pluck('nama_tag')->filter()->unique()->values()->toArray();
+
+    // Kirim ke view
+    return view('backend.manajementproduk.produk.show', compact('produkDetail', 'tags'));
+}
+
+public function edit($kode_produk)
+{
+    // Ambil data produk berdasarkan kode_produk
+    $produk = Produk::where('kode_produk', $kode_produk)->first();
+
+    if (!$produk) {
+        return redirect()->back()->with('error', 'Produk dengan kode ini tidak ditemukan.');
+    }
+
+    // Ambil semua kategori
+    $kategori = DB::table('kategori_produks')->get();
+
+    // Ambil tag ID yang sudah terkait
+    $tags = DB::table('tag_produks')
+        ->where('produk_id', $produk->id)
+        ->pluck('tag_id')
+        ->toArray();
+
+    // Ambil semua tag
+    $allTags = DB::table('tags')->get();
+
+    return view('backend.manajementproduk.produk.edit', compact('produk', 'kategori', 'tags', 'allTags'));
+}
 
 
 
 
+public function update(Request $request, $kode_produk)
+{
+    DB::beginTransaction();
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit($kode_produk)
-    {
-        // Ambil data produk berdasarkan kode_produk
+    try {
+        $produk = Produk::where('kode_produk', $kode_produk)->first();
+
+        if (!$produk) {
+            return redirect()->back()->with('error', 'Produk tidak ditemukan.');
+        }
+
+        // Validasi input manual
+        if (empty($request->deskripsi_produk) || strlen($request->deskripsi_produk) < 10) {
+            return redirect()->back()->with('error', 'Deskripsi harus diisi dan minimal 10 karakter.')->withInput();
+        }
+        if (!is_numeric($request->stok_produk) || $request->stok_produk < 1) {
+            return redirect()->back()->with('error', 'Stok produk tidak boleh kosong atau kurang dari 1.')->withInput();
+        }
+        if (!is_numeric($request->harga_produk) || $request->harga_produk < 1) {
+            return redirect()->back()->with('error', 'Harga produk tidak boleh kosong atau kurang dari 1.')->withInput();
+        }
+
+        // Validasi kategori
+        $kategoriAda = DB::table('kategori_produks')->where('id', $request->kategori_id)->exists();
+        if (!$kategoriAda) {
+            return redirect()->back()->with('error', 'Kategori tidak ditemukan.')->withInput();
+        }
+
+        // Validasi tags
+        if (!is_array($request->kode_tag)) {
+            return redirect()->back()->with('error', 'Tag harus berupa array.')->withInput();
+        }
+
+        foreach ($request->kode_tag as $tag) {
+            $cekTag = Tag::where('id', $tag)->exists();
+            if (!$cekTag) {
+                return redirect()->back()->with('error', 'Tag dengan ID "' . $tag . '" tidak ditemukan.')->withInput();
+            }
+        }
+
+        // Jika user upload gambar baru
+        if ($request->hasFile('gambar_produk')) {
+            $gambarFile = $request->file('gambar_produk');
+            $mime = $gambarFile->getMimeType();
+
+            if (!in_array($mime, ['image/jpeg', 'image/png', 'image/jpg'])) {
+                return redirect()->back()->with('error', 'File gambar harus berupa JPG, JPEG, atau PNG.')->withInput();
+            }
+
+            // Hapus gambar lama
+            if ($produk->gambar_produk && Storage::disk('public')->exists($produk->gambar_produk)) {
+                Storage::disk('public')->delete($produk->gambar_produk);
+            }
+
+            // Upload gambar baru
+            $gambarPath = $gambarFile->store('produk', 'public');
+            $produk->gambar_produk = $gambarPath;
+        }
+
+        // Update data produk
+        $produk->nama_produk = $request->nama_produk;
+        $produk->deskripsi_produk = $request->deskripsi_produk;
+        $produk->stok_produk = $request->stok_produk;
+        $produk->harga_produk = $request->harga_produk;
+        $produk->kategori_produk_id = $request->kategori_id;
+        $produk->save();
+
+        // Update relasi tag
+        DB::table('tag_produks')->where('produk_id', $produk->id)->delete();
+        foreach ($request->kode_tag as $tagId) {
+            DB::table('tag_produks')->insert([
+                'produk_id' => $produk->id,
+                'tag_id' => $tagId,
+            ]);
+        }
+
+        DB::commit();
+        return redirect()->route('produk.index')->with('success', 'Produk berhasil diperbarui!');
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->back()->with('error', 'Gagal memperbarui produk: ' . $e->getMessage())->withInput();
+    }
+}
+
+
+public function destroy(Request $request)
+{
+    $kode_produk = $request->kode_produk;
+
+    DB::beginTransaction();
+
+    try {
+        // Ambil data produk
         $produk = DB::table('produks')->where('kode_produk', $kode_produk)->first();
 
-        // Validasi: jika data produk tidak ditemukan
         if (!$produk) {
-            return redirect()->back()->with('error', 'Produk dengan kode ini tidak ditemukan.');
+            return redirect()->route('produk.index')->with('error', 'Produk tidak ditemukan.');
         }
 
-        // Ambil semua kategori
-        $kategori = Kategori::all();
-
-        // Ambil tags yang terkait dengan produk ini
-        $tags = DB::table('tag_produks')
-                    ->join('tags', 'tag_produks.kode_tag', '=', 'tags.kode_tag')
-                    ->where('tag_produks.kode_produk', $kode_produk)
-                    ->pluck('tags.kode_tag')->toArray(); // Fetch associated tags
-
-        // Ambil semua tags yang tersedia
-        $allTags = Tag::all();
-
-        // Tampilkan view edit dengan membawa data produk, kategori, tags yang ada, dan semua tags
-        return view('backend.manajementproduk.produk.edit', compact('produk', 'kategori', 'tags', 'allTags'));
-    }
-
-
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $kode_produk)
-    {
-        DB::beginTransaction();  // Start the transaction
-
-        try {
-            // Cek apakah produk dengan kode_produk ada
-            $produk = Produk::where('kode_produk', $kode_produk)->first();
-
-            if (!$produk) {
-                throw new \Exception('Produk tidak ditemukan.');
-            }
-
-            // Cek duplikasi nama produk (kecuali produk itu sendiri)
-            $existingNama = DB::connection('pgsql')->table('produks')
-                ->where('nama_produk', $request->nama_produk)
-                ->where('kode_produk', '!=', $kode_produk)  // pastikan tidak memeriksa produk itu sendiri
-                ->exists();
-
-            if ($existingNama) {
-                throw new \Exception('Nama Produk "' . $request->nama_produk . '" sudah ada di database.');
-            }
-
-            // Validasi deskripsi
-            if (empty($request->deskripsi_produk) || strlen($request->deskripsi_produk) < 10) {
-                throw new \Exception('Deskripsi harus diisi dan minimal 10 karakter.');
-            }
-
-            // Validasi stok (minimal 1)
-            if (!is_numeric($request->stok_produk) || $request->stok_produk < 1) {
-                throw new \Exception('Stok produk tidak boleh kosong atau kurang dari 1.');
-            }
-
-            // Validasi harga (minimal 1)
-            if (!is_numeric($request->harga_produk) || $request->harga_produk < 1) {
-                throw new \Exception('Harga produk tidak boleh kosong atau kurang dari 1.');
-            }
-
-            // Validasi kategori
-            $kategoriAda = DB::connection('pgsql')->table('kategoris')
-                ->where('kode_kategori', $request->kode_kategori)
-                ->exists();
-
-            if (!$kategoriAda) {
-                throw new \Exception('Kategori tidak ditemukan.');
-            }
-
-            // Validasi status produk
-            $status = $request->status_produk;
-            if (empty($status) || !in_array($status, ['Aktif', 'Tidak Aktif'])) {
-                throw new \Exception('Status produk wajib dipilih dan hanya boleh "Aktif" atau "Tidak Aktif".');
-            }
-
-            // Cek dan buat folder jika belum ada
-            if ($request->hasFile('gambar_produk')) {
-                // Validasi gambar
-                $ext = $request->file('gambar_produk')->extension();
-                $allowed = ['jpg', 'jpeg', 'png'];
-                if (!in_array($ext, $allowed)) {
-                    throw new \Exception('File gambar harus berupa JPG, JPEG, atau PNG.');
-                }
-
-                // Jika gambar diunggah, simpan gambar ke folder produk
-                if (!Storage::disk('public')->exists('produk')) {
-                    Storage::disk('public')->makeDirectory('produk');
-                }
-
-                $gambar = $request->file('gambar_produk')->store('produk', 'public');
-                $produk->gambar_produk = $gambar; // Update gambar produk
-            }
-
-            // Validasi dan update tags
-            if ($request->has('tags') && is_array($request->tags)) {
-                foreach ($request->tags as $tag) {
-                    // Validasi apakah tag ada di database
-                    $cekTag = DB::connection('pgsql')->table('tags')
-                        ->where('kode_tag', $tag)
-                        ->exists();
-
-                    if (!$cekTag) {
-                        throw new \Exception('Tag "' . $tag . '" tidak ditemukan.');
-                    }
-                }
-
-                // Menghapus hubungan lama dan menambahkan tag baru
-                DB::connection('pgsql')->table('tag_produks')
-                    ->where('kode_produk', $kode_produk)  // Hapus hubungan lama
-                    ->delete();
-
-                // Menambahkan tag baru ke tag_produks
-                foreach ($request->tags as $tag) {
-                    DB::connection('pgsql')->table('tag_produks')->insert([
-                        'kode_produk' => $kode_produk,
-                        'kode_tag'    => $tag,
-                    ]);
-                }
-            }
-
-            // Update produk
-            $produk->update([
-                'nama_produk'       => $request->nama_produk,
-                'deskripsi_produk'  => $request->deskripsi_produk,
-                'stok_produk'       => $request->stok_produk,
-                'harga_produk'      => $request->harga_produk,
-                'kode_kategori'     => $request->kode_kategori,
-                'status_produk'     => $status,
-            ]);
-
-            DB::commit();  // Commit the transaction if everything was successful
-            return redirect()->route('produk.index')->with('success', 'Produk berhasil diperbarui!');
-
-        } catch (\Exception $e) {
-            DB::rollBack();  // Rollback the transaction if any exception occurs
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat memperbarui produk: ' . $e->getMessage())
-                ->withInput();
+        // Hapus gambar dari storage jika ada
+        if ($produk->gambar_produk && Storage::disk('public')->exists($produk->gambar_produk)) {
+            Storage::disk('public')->delete($produk->gambar_produk);
         }
+
+        // Hapus semua relasi dari tabel tag_produks
+        DB::table('tag_produks')->where('produk_id', $produk->id)->delete();
+
+        // Hapus data produk
+        DB::table('produks')->where('kode_produk', $kode_produk)->delete();
+
+        DB::commit();
+        return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus.');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return redirect()->route('produk.index')->with('error', 'Gagal menghapus produk: ' . $e->getMessage());
     }
+}
 
-
-    public function destroy(Request $request)
-    {
-        $kode_produk = $request->kode_produk; // Mendapatkan kode_produk dari request
-
-        // Mulai transaksi database
-        DB::beginTransaction();
-
-        try {
-            // Cari produk berdasarkan kode_produk
-            $cek_produk = DB::connection('pgsql')->table('produks')->where('kode_produk', $kode_produk)->first();
-
-            // Validasi: jika produk tidak ditemukan, return error
-            if (!$cek_produk) {
-                return redirect()->route('produk.index')->with('error', 'Produk tidak ditemukan.');
-            }
-
-            // Hapus gambar produk dari penyimpanan jika ada
-            if ($cek_produk->gambar_produk) {
-                $gambarPath = storage_path('app/public/' . $cek_produk->gambar_produk);
-                if (file_exists($gambarPath)) {
-                    unlink($gambarPath); // Hapus gambar dari penyimpanan
-                }
-            }
-
-            // Hapus produk dari database
-            DB::connection('pgsql')->table('produks')->where('kode_produk', $kode_produk)->delete();
-
-            // Commit transaksi jika tidak ada error
-            DB::commit();
-
-            // Return success response
-            return redirect()->route('produk.index')->with('success', 'Produk berhasil dihapus.');
-
-        } catch (\Exception $e) {
-            // Rollback transaksi jika ada error
-            DB::rollBack();
-
-            // Return error response
-            return redirect()->route('produk.index')->with('error', 'Terjadi kesalahan dalam menghapus produk.');
-        }
-    }
 
 public function GetKeranjangFrontEnd(Request $request)
 {
@@ -534,7 +535,7 @@ public function GetTagFrontEnd(Request $request)
 
 
 
-public function GetKategoriFrontEnd(Request $request)
+public function GetKategoriTokoFrontEnd(Request $request)
 {
     $lastSentData = null;
 
@@ -542,8 +543,7 @@ public function GetKategoriFrontEnd(Request $request)
         while (true) {
             try {
                 // Ambil semua data kategori terbaru
-                $kategoriData = DB::table('kategoris')
-                    ->orderBy('id', 'desc')
+                $kategoriData  = kategori_toko::orderBy('id', 'asc')
                     ->get();
 
                 $kategoriResult = $kategoriData->toArray(); // convert ke array biasa
@@ -586,6 +586,59 @@ public function GetKategoriFrontEnd(Request $request)
 
     return $response;
 }
+
+
+// public function GetKategoriProdukFrontEnd(Request $request)
+// {
+//     $lastSentData = null;
+
+//     $response = new StreamedResponse(function () use (&$lastSentData) {
+//         while (true) {
+//             try {
+//                 // Ambil semua data kategori terbaru
+//                 $kategoriData  = KategoriProduk::orderBy('id', 'asc')
+//                     ->get();
+
+//                 $kategoriResult = $kategoriData->toArray(); // convert ke array biasa
+
+//                 // Bandingkan data sekarang dengan data terakhir
+//                 if ($lastSentData && json_encode($lastSentData) === json_encode($kategoriResult)) {
+//                     sleep(1);
+//                     continue;
+//                 }
+
+//                 // Kirim data baru jika berbeda
+//                 echo "data: " . json_encode([
+//                     'status' => 'success',
+//                     'kategori' => $kategoriResult,
+//                 ]) . "\n\n";
+
+//                 $lastSentData = $kategoriResult;
+
+//                 ob_flush();
+//                 flush();
+
+//             } catch (\Exception $e) {
+//                 echo "data: " . json_encode([
+//                     'status' => 'error',
+//                     'message' => $e->getMessage(),
+//                 ]) . "\n\n";
+
+//                 ob_flush();
+//                 flush();
+//             }
+
+//             sleep(1); // polling setiap 1 detik
+//         }
+//     });
+
+//     // Header SSE
+//     $response->headers->set('Content-Type', 'text/event-stream');
+//     $response->headers->set('Cache-Control', 'no-cache');
+//     $response->headers->set('Connection', 'keep-alive');
+
+//     return $response;
+// }
 public function GetProdukDetailKategoriFrontEnd(Request $request)
 {
     $kodeKategori = $request->query('kode_kategori', null);
@@ -672,53 +725,113 @@ public function GetProdukFrontEnd(Request $request)
     $lastSentData = null;
 
     $response = new StreamedResponse(function () use (&$lastSentData) {
+        // Loop terus menerus untuk SSE
         while (true) {
             try {
                 // Ambil data produk beserta tag (left join)
                 $produkWithTagsRaw = DB::table('produks')
-                    ->leftJoin('tag_produks', 'produks.kode_produk', '=', 'tag_produks.kode_produk')
-                    ->leftJoin('tags', 'tag_produks.kode_tag', '=', 'tags.kode_tag')
-                    ->select('produks.*', 'tags.nama_tag')
+                    ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+                    ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+                    ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id') // pastikan relasi benar
+                    ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+                    ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+                    ->select(
+                        'produks.id',
+                        'produks.kode_produk',
+                        'produks.nama_produk',
+                        'produks.deskripsi_produk',
+                        'produks.stok_produk',
+                        'produks.harga_produk',
+                        'produks.gambar_produk',
+                        'produks.kategori_produk_id',
+                        'produks.toko_id',
+                        'produks.status_produk',
+                        'produks.status_draf_produk',
+                        'tokos.nama_toko',
+                        'tokos.deskripsi_toko',
+                        'kategori_tokos.nama_kategori_toko',
+                        'kategori_tokos.deskripsi_kategori_toko',
+                        'kategori_produks.nama_kategori_produk',
+                        'kategori_produks.deskripsi_kategori_produk',
+                        'tags.id as tag_id',
+                        'tags.nama_tag',
+                        'tags.deskripsi_tag'
+                    )
                     ->orderBy('produks.id', 'desc')
                     ->get();
 
-                // Gabungkan tag dalam array per produk
+                // Grouping produk dan tags
                 $produkGrouped = [];
+
                 foreach ($produkWithTagsRaw as $item) {
                     $kode = $item->kode_produk;
 
                     if (!isset($produkGrouped[$kode])) {
-                        $produkGrouped[$kode] = (array) $item;
-                        $produkGrouped[$kode]['tags'] = [];
+                        $produkGrouped[$kode] = [
+                            'id' => $item->id,
+                            'kode_produk' => $item->kode_produk,
+                            'nama_produk' => $item->nama_produk,
+                            'deskripsi_produk' => $item->deskripsi_produk,
+                            'stok_produk' => $item->stok_produk,
+                            'harga_produk' => $item->harga_produk,
+                            'gambar_produk' => $item->gambar_produk,
+                            'status_produk' => $item->status_produk,
+                            'status_draf_produk' => $item->status_draf_produk,
+                            'kategori_produk_id' => $item->kategori_produk_id,
+                            'toko' => [
+                                'id' => $item->toko_id,
+                                'nama_toko' => $item->nama_toko,
+                                'deskripsi_toko' => $item->deskripsi_toko,
+                            ],
+                            'kategori_toko' => [
+                                'id' => $item->kategori_produk_id,
+                                'nama_kategori_toko' => $item->nama_kategori_toko,
+                                'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+                            ],
+                            'kategori_produk' => [
+                                'nama_kategori_produk' => $item->nama_kategori_produk,
+                                'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+                            ],
+                            'tags' => []
+                        ];
                     }
 
-                    if (!is_null($item->nama_tag)) {
-                        $produkGrouped[$kode]['tags'][] = $item->nama_tag;
+                    if (!is_null($item->tag_id)) {
+                        $produkGrouped[$kode]['tags'][] = [
+                            'id' => $item->tag_id,
+                            'nama_tag' => $item->nama_tag,
+                            'deskripsi_tag' => $item->deskripsi_tag,
+                        ];
                     }
                 }
 
-                $produkResult = array_values($produkGrouped); // pastikan array indeks
+                $produkResult = array_values($produkGrouped);
 
-                // Bandingkan data sekarang dengan yang terakhir dikirim
-                if ($lastSentData && json_encode($lastSentData) === json_encode($produkResult)) {
+                // Bandingkan data sebelumnya dengan data sekarang
+                // Gunakan hash untuk performa lebih baik
+                $currentHash = md5(json_encode($produkResult));
+                $lastHash = $lastSentData ? md5(json_encode($lastSentData)) : null;
+
+                if ($currentHash === $lastHash) {
+                    // Tidak ada perubahan, tunggu dan lanjutkan
                     sleep(1);
                     continue;
                 }
 
-                // Kirim data baru jika ada perubahan
+                // Kirim data terbaru dengan format SSE
                 echo "data: " . json_encode([
                     'status' => 'success',
                     'produk' => $produkResult,
                 ]) . "\n\n";
 
-                // Simpan data terakhir untuk perbandingan
+                // Simpan data terakhir
                 $lastSentData = $produkResult;
 
                 ob_flush();
                 flush();
 
             } catch (\Exception $e) {
-                // Kirim pesan error jika terjadi kesalahan
+                // Kirim error message
                 echo "data: " . json_encode([
                     'status' => 'error',
                     'message' => $e->getMessage(),
@@ -728,17 +841,101 @@ public function GetProdukFrontEnd(Request $request)
                 flush();
             }
 
-            sleep(1); // jeda polling 1 detik
+            sleep(1);
         }
     });
 
-    // Set header SSE
+    // Header SSE
     $response->headers->set('Content-Type', 'text/event-stream');
     $response->headers->set('Cache-Control', 'no-cache');
     $response->headers->set('Connection', 'keep-alive');
 
     return $response;
 }
+
+public function GetSreachProdukFrontEnd(Request $request)
+{
+    $produkWithTagsRaw = DB::table('produks')
+        ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+        ->join('kategori_tokos', 'produks.kategori_produk_id', '=', 'kategori_tokos.id')
+        ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.kategori_produk_id') // diasumsikan relasi
+        ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+        ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+        ->select(
+            'produks.id',
+            'produks.kode_produk',
+            'produks.nama_produk',
+            'produks.deskripsi_produk',
+            'produks.stok_produk',
+            'produks.harga_produk',
+            'produks.gambar_produk',
+            'produks.kategori_produk_id',
+            'produks.toko_id',
+            'produks.status_produk',
+            'produks.status_draf_produk',
+            'tokos.nama_toko',
+            'tokos.deskripsi_toko',
+            'kategori_tokos.nama_kategori_toko',
+            'kategori_tokos.deskripsi_kategori_toko',
+            'kategori_produks.nama_kategori_produk',
+            'kategori_produks.deskripsi_kategori_produk',
+            'tags.id as tag_id',
+            'tags.nama_tag',
+            'tags.deskripsi_tag'
+        )
+        ->orderBy('produks.id', 'desc')
+        ->get();
+
+    $produkGrouped = [];
+
+    foreach ($produkWithTagsRaw as $item) {
+        $kode = $item->kode_produk;
+
+        if (!isset($produkGrouped[$kode])) {
+            $produkGrouped[$kode] = [
+                'id' => $item->id,
+                'kode_produk' => $item->kode_produk,
+                'nama_produk' => $item->nama_produk,
+                'deskripsi_produk' => $item->deskripsi_produk,
+                'stok_produk' => $item->stok_produk,
+                'harga_produk' => $item->harga_produk,
+                'gambar_produk' => $item->gambar_produk,
+                'status_produk' => $item->status_produk,
+                'status_draf_produk' => $item->status_draf_produk,
+                'toko' => [
+                    'id' => $item->toko_id,
+                    'nama_toko' => $item->nama_toko,
+                    'deskripsi_toko' => $item->deskripsi_toko,
+                ],
+                'kategori_toko' => [
+                    'id' => $item->kategori_produk_id,
+                    'nama_kategori_toko' => $item->nama_kategori_toko,
+                    'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+                ],
+                'kategori_produk' => [
+                    'nama_kategori_produk' => $item->nama_kategori_produk,
+                    'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+                ],
+                'tags' => []
+            ];
+        }
+
+        if (!is_null($item->tag_id)) {
+            $produkGrouped[$kode]['tags'][] = [
+                'id' => $item->tag_id,
+                'nama_tag' => $item->nama_tag,
+                'deskripsi_tag' => $item->deskripsi_tag,
+            ];
+        }
+    }
+
+    return response()->json([
+        'status' => 'success',
+        'data' => array_values($produkGrouped)
+    ]);
+}
+
+
 
 public function GetDetailProdukFrontEnd($kode_produk = "PRD002")
 {

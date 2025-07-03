@@ -16,16 +16,7 @@ class Produk extends Model
     protected $primaryKey = 'id';
 
     // Kolom yang dapat diisi mass-assignment
-    protected $fillable = [
-        'kode_produk',
-        'nama_produk',
-        'deskripsi_produk',
-        'stok_produk',
-        'harga_produk',
-        'gambar_produk',
-        'kode_kategori',
-        'status_produk',
-    ];
+    protected $guarded = ['id'];
 
     protected $connection = 'pgsql'; // kalau pakai pgsql, wajib ini
 

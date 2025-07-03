@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('tag_produks', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_tag');
-            $table->string('kode_produk');
+            $table->unsignedBigInteger('tag_id');
+            $table->unsignedBigInteger('produk_id');
             $table->timestamps();
             $table->softDeletes();
-            $table->foreign('kode_tag')->references('kode_tag')->on('tags')->onDelete('cascade');
-            $table->foreign('kode_produk')->references('kode_produk')->on('produks')->onDelete('cascade');
+            $table->foreign('tag_id')->references('id')->on('tags')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('produk_id')->references('id')->on('produks')->onUpdate('cascade')->onDelete('cascade');
+
         });
 
     }

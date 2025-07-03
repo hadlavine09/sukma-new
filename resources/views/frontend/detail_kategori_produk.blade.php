@@ -185,7 +185,7 @@
 
                     <div class="bootstrap-tabs product-tabs">
                         <div class="tabs-header d-flex justify-content-between border-bottom my-5">
-                            <h3>Trending Products {{ $kategori->nama_kategori }}</h3>
+                            <h3>Trending Products {{ $kategori_toko->nama_kategori_toko }}</h3>
                             <nav>
                                 <div class="nav nav-tabs" id="nav-tab" role="tablist">
                                     <a href="#" class="nav-link text-uppercase fs-6 active" id="nav-all-tab"
@@ -275,7 +275,7 @@
                                     };
 
                                     // SSE produk
-                                    const sseUrl = "{{ route('frontend.GetProdukDetailKategoriFrontEnd') }}?kode_kategori={{ urlencode($kategori->kode_kategori) }}";
+                                    const sseUrl = "{{ route('frontend.GetProdukDetailKategoriFrontEnd') }}?kode_kategori={{ urlencode($kategori_toko->kode_kategori_toko) }}";
 
                                     // Buat EventSource dari URL SSE dengan parameter kode_kategori
                                     const evtSource = new EventSource(sseUrl);
