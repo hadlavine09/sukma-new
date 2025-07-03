@@ -855,84 +855,162 @@ public function GetProdukFrontEnd(Request $request)
 
 public function GetSreachProdukFrontEnd(Request $request)
 {
-    $produkWithTagsRaw = DB::table('produks')
-        ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
-        ->join('kategori_tokos', 'produks.kategori_produk_id', '=', 'kategori_tokos.id')
-        ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id') // diasumsikan relasi
-        ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
-        ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
-        ->select(
-            'produks.id',
-            'produks.kode_produk',
-            'produks.nama_produk',
-            'produks.deskripsi_produk',
-            'produks.stok_produk',
-            'produks.harga_produk',
-            'produks.gambar_produk',
-            'produks.kategori_produk_id',
-            'produks.toko_id',
-            'produks.status_produk',
-            'produks.status_draf_produk',
-            'tokos.nama_toko',
-            'tokos.deskripsi_toko',
-            'kategori_tokos.nama_kategori_toko',
-            'kategori_tokos.deskripsi_kategori_toko',
-            'kategori_produks.nama_kategori_produk',
-            'kategori_produks.deskripsi_kategori_produk',
-            'tags.id as tag_id',
-            'tags.nama_tag',
-            'tags.deskripsi_tag'
-        )
-        ->orderBy('produks.id', 'desc')
-        ->get();
+    // $produkWithTagsRaw = DB::table('produks')
+    //     ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+    //     ->join('kategori_tokos', 'produks.kategori_produk_id', '=', 'kategori_tokos.id')
+    //     ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id') // diasumsikan relasi
+    //     ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+    //     ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+    //     ->select(
+    //         'produks.id',
+    //         'produks.kode_produk',
+    //         'produks.nama_produk',
+    //         'produks.deskripsi_produk',
+    //         'produks.stok_produk',
+    //         'produks.harga_produk',
+    //         'produks.gambar_produk',
+    //         'produks.kategori_produk_id',
+    //         'produks.toko_id',
+    //         'produks.status_produk',
+    //         'produks.status_draf_produk',
+    //         'tokos.nama_toko',
+    //         'tokos.deskripsi_toko',
+    //         'kategori_tokos.nama_kategori_toko',
+    //         'kategori_tokos.deskripsi_kategori_toko',
+    //         'kategori_produks.nama_kategori_produk',
+    //         'kategori_produks.deskripsi_kategori_produk',
+    //         'tags.id as tag_id',
+    //         'tags.nama_tag',
+    //         'tags.deskripsi_tag'
+    //     )
+    //     ->orderBy('produks.id', 'desc')
+    //     ->get();
 
-    $produkGrouped = [];
+    // $produkGrouped = [];
 
-    foreach ($produkWithTagsRaw as $item) {
-        $kode = $item->kode_produk;
+    // foreach ($produkWithTagsRaw as $item) {
+    //     $kode = $item->kode_produk;
 
-        if (!isset($produkGrouped[$kode])) {
-            $produkGrouped[$kode] = [
-                'id' => $item->id,
-                'kode_produk' => $item->kode_produk,
-                'nama_produk' => $item->nama_produk,
-                'deskripsi_produk' => $item->deskripsi_produk,
-                'stok_produk' => $item->stok_produk,
-                'harga_produk' => $item->harga_produk,
-                'gambar_produk' => $item->gambar_produk,
-                'status_produk' => $item->status_produk,
-                'status_draf_produk' => $item->status_draf_produk,
-                'toko' => [
-                    'id' => $item->toko_id,
-                    'nama_toko' => $item->nama_toko,
-                    'deskripsi_toko' => $item->deskripsi_toko,
-                ],
-                'kategori_toko' => [
-                    'id' => $item->kategori_produk_id,
-                    'nama_kategori_toko' => $item->nama_kategori_toko,
-                    'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
-                ],
-                'kategori_produk' => [
-                    'nama_kategori_produk' => $item->nama_kategori_produk,
-                    'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
-                ],
-                'tags' => []
-            ];
-        }
+    //     if (!isset($produkGrouped[$kode])) {
+    //         $produkGrouped[$kode] = [
+    //             'id' => $item->id,
+    //             'kode_produk' => $item->kode_produk,
+    //             'nama_produk' => $item->nama_produk,
+    //             'deskripsi_produk' => $item->deskripsi_produk,
+    //             'stok_produk' => $item->stok_produk,
+    //             'harga_produk' => $item->harga_produk,
+    //             'gambar_produk' => $item->gambar_produk,
+    //             'status_produk' => $item->status_produk,
+    //             'status_draf_produk' => $item->status_draf_produk,
+    //             'toko' => [
+    //                 'id' => $item->toko_id,
+    //                 'nama_toko' => $item->nama_toko,
+    //                 'deskripsi_toko' => $item->deskripsi_toko,
+    //             ],
+    //             'kategori_toko' => [
+    //                 'id' => $item->kategori_produk_id,
+    //                 'nama_kategori_toko' => $item->nama_kategori_toko,
+    //                 'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+    //             ],
+    //             'kategori_produk' => [
+    //                 'nama_kategori_produk' => $item->nama_kategori_produk,
+    //                 'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+    //             ],
+    //             'tags' => []
+    //         ];
+    //     }
 
-        if (!is_null($item->tag_id)) {
-            $produkGrouped[$kode]['tags'][] = [
-                'id' => $item->tag_id,
-                'nama_tag' => $item->nama_tag,
-                'deskripsi_tag' => $item->deskripsi_tag,
-            ];
-        }
-    }
+    //     if (!is_null($item->tag_id)) {
+    //         $produkGrouped[$kode]['tags'][] = [
+    //             'id' => $item->tag_id,
+    //             'nama_tag' => $item->nama_tag,
+    //             'deskripsi_tag' => $item->deskripsi_tag,
+    //         ];
+    //     }
+    // }
 
-    return response()->json([
-        'status' => 'success',
-        'data' => array_values($produkGrouped)
-    ]);
+    // return response()->json([
+    //     'status' => 'success',
+    //     'data' => array_values($produkGrouped)
+    // ]);
+ $produkWithTagsRaw = DB::table('produks')
+                    ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+                    ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+                    ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id') // pastikan relasi benar
+                    ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+                    ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+                    ->select(
+                        'produks.id',
+                        'produks.kode_produk',
+                        'produks.nama_produk',
+                        'produks.deskripsi_produk',
+                        'produks.stok_produk',
+                        'produks.harga_produk',
+                        'produks.gambar_produk',
+                        'produks.kategori_produk_id',
+                        'produks.toko_id',
+                        'produks.status_produk',
+                        'produks.status_draf_produk',
+                        'tokos.nama_toko',
+                        'tokos.deskripsi_toko',
+                        'kategori_tokos.nama_kategori_toko',
+                        'kategori_tokos.deskripsi_kategori_toko',
+                        'kategori_produks.nama_kategori_produk',
+                        'kategori_produks.deskripsi_kategori_produk',
+                        'tags.id as tag_id',
+                        'tags.nama_tag',
+                        'tags.deskripsi_tag'
+                    )
+                    ->orderBy('produks.id', 'desc')
+                    ->get();
+
+                // Grouping produk dan tags
+                $produkGrouped = [];
+
+                foreach ($produkWithTagsRaw as $item) {
+                    $kode = $item->kode_produk;
+
+                    if (!isset($produkGrouped[$kode])) {
+                        $produkGrouped[$kode] = [
+                            'id' => $item->id,
+                            'kode_produk' => $item->kode_produk,
+                            'nama_produk' => $item->nama_produk,
+                            'deskripsi_produk' => $item->deskripsi_produk,
+                            'stok_produk' => $item->stok_produk,
+                            'harga_produk' => $item->harga_produk,
+                            'gambar_produk' => $item->gambar_produk,
+                            'status_produk' => $item->status_produk,
+                            'status_draf_produk' => $item->status_draf_produk,
+                            'kategori_produk_id' => $item->kategori_produk_id,
+                            'toko' => [
+                                'id' => $item->toko_id,
+                                'nama_toko' => $item->nama_toko,
+                                'deskripsi_toko' => $item->deskripsi_toko,
+                            ],
+                            'kategori_toko' => [
+                                'id' => $item->kategori_produk_id,
+                                'nama_kategori_toko' => $item->nama_kategori_toko,
+                                'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+                            ],
+                            'kategori_produk' => [
+                                'nama_kategori_produk' => $item->nama_kategori_produk,
+                                'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+                            ],
+                            'tags' => []
+                        ];
+                    }
+
+                    if (!is_null($item->tag_id)) {
+                        $produkGrouped[$kode]['tags'][] = [
+                            'id' => $item->tag_id,
+                            'nama_tag' => $item->nama_tag,
+                            'deskripsi_tag' => $item->deskripsi_tag,
+                        ];
+                    }
+                }
+
+                $produkResult = array_values($produkGrouped);
+                return $produkResult;
 }
 
 
