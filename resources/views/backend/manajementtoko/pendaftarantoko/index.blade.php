@@ -94,32 +94,35 @@
 
     <script>
         function verifikasiToko(kode_toko, izinkan = true) {
-            const url = izinkan ?
-                "{{ route('izin_toko.izinkan') }}" :
-                "{{ route('izin_toko.tidak_izinkan') }}";
+    const url = izinkan ?
+        "{{ route('izin_toko.izinkan') }}" :
+        "{{ route('izin_toko.tidak_izinkan') }}";
 
-            if (confirm('Yakin ingin ' + (izinkan ? 'mengizinkan' : 'menolak') + ' toko ini?')) {
-                fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            kode_toko: kode_toko
-                        })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        alert(data.message || (izinkan ? 'Toko berhasil diizinkan.' : 'Toko ditolak.'));
-                        $('#izinTokoTable').DataTable().ajax.reload();
-                    })
-                    .catch(error => {
-                        console.error(error);
-                        alert('Terjadi kesalahan saat memproses data.');
-                    });
+    if (confirm('Yakin ingin ' + (izinkan ? 'mengizinkan' : 'menolak') + ' toko ini?')) {
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                kode_toko: kode_toko
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.status) {
+                $('#izinTokoTable').DataTable().ajax.reload();
             }
-        }
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Terjadi kesalahan saat memproses data.');
+        });
+    }
+}
+
 
         $(document).ready(function() {
             $('#izinTokoTable').DataTable({

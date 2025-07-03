@@ -65,22 +65,19 @@ class IzinTokoController extends Controller
 
         DB::beginTransaction();
         try {
-            // Ambil data toko dengan status 'proses'
             $toko = DB::table('tokos')
                 ->where('status_toko', 'proses')
                 ->where('kode_toko', $kode_toko)
                 ->first();
 
             if (! $toko) {
-                return redirect()->back()->with('error', 'Toko tidak ditemukan atau status tidak sesuai.');
+                return response()->json(['status' => false, 'message' => 'Toko tidak ditemukan atau status tidak sesuai.']);
             }
 
-            // Update status toko menjadi 'izinkan'
             DB::table('tokos')
                 ->where('id', $toko->id)
                 ->update(['status_toko' => 'izinkan']);
 
-            // Generate nomor izin otomatis
             $last       = IzinToko::orderBy('nomor_izin', 'desc')->first();
             $lastNumber = 0;
 
@@ -90,21 +87,20 @@ class IzinTokoController extends Controller
 
             $nomor_izin = 'IZT' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
 
-            // Simpan data ke tabel izin_tokos
             IzinToko::create([
                 'toko_id'        => $toko->id,
                 'nomor_izin'     => $nomor_izin,
                 'nama_dokumen'   => 'Dokumen Izin Toko #' . $toko->id,
-                'file_dokumen'   => 'default.pdf', // Ubah jika menggunakan upload file
+                'file_dokumen'   => 'default.pdf',
                 'tanggal_terbit' => Carbon::now()->toDateString(),
                 'created_at'     => Carbon::now(),
             ]);
 
             DB::commit();
-            return redirect()->back()->with('success', 'Toko berhasil diizinkan dan data izin disimpan.');
+            return response()->json(['status' => true, 'message' => 'Toko berhasil diizinkan dan data izin disimpan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal memproses izin: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Gagal memproses izin: ' . $e->getMessage()]);
         }
     }
     public function tidak_izinkan(Request $request)
@@ -113,26 +109,24 @@ class IzinTokoController extends Controller
 
         DB::beginTransaction();
         try {
-            // Ambil data toko dengan status 'proses'
             $toko = DB::table('tokos')
                 ->where('status_toko', 'proses')
                 ->where('kode_toko', $kode_toko)
                 ->first();
 
             if (! $toko) {
-                return redirect()->back()->with('error', 'Toko tidak ditemukan atau status tidak sesuai.');
+                return response()->json(['status' => false, 'message' => 'Toko tidak ditemukan atau status tidak sesuai.']);
             }
 
-            // Update status toko menjadi 'tidak_diizinkan'
             DB::table('tokos')
                 ->where('id', $toko->id)
                 ->update(['status_toko' => 'tidak_diizinkan']);
 
             DB::commit();
-            return redirect()->back()->with('success', 'Toko berhasil tidak diizinkan dan data izin disimpan.');
+            return response()->json(['status' => true, 'message' => 'Toko berhasil tidak diizinkan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Gagal memproses izin: ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Gagal memproses izin: ' . $e->getMessage()]);
         }
     }
     /**

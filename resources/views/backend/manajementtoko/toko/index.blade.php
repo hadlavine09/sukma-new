@@ -1,57 +1,56 @@
 @extends('backend.component.main')
 
 @section('content')
-<main class="app-content">
-    <div class="app-title mb-4">
-        <div>
-            <h4><i class="bi bi-shop me-2"></i>Data Toko</h4>
-            <p class="text-muted">Tabel untuk menampilkan data toko</p>
+    <main class="app-content">
+        <div class="app-title mb-4">
+            <div>
+                <h4><i class="bi bi-shop me-2"></i>Data Toko</h4>
+                <p class="text-muted">Tabel untuk menampilkan data toko</p>
+            </div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small">
+                    <li class="breadcrumb-item"><i class="bi bi-house-door"></i></li>
+                    <li class="breadcrumb-item">Tables</li>
+                    <li class="breadcrumb-item active">Toko</li>
+                </ol>
+            </nav>
         </div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb small">
-                <li class="breadcrumb-item"><i class="bi bi-house-door"></i></li>
-                <li class="breadcrumb-item">Tables</li>
-                <li class="breadcrumb-item active">Toko</li>
-            </ol>
-        </nav>
-    </div>
 
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body">
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert" id="success-alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                @if (session('error'))
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-alert">
+                        {{ session('error') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border shadow-sm rounded" id="tokoTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="text-center">No</th>
+                                <th>Nama Toko</th>
+                                <th>Pemilik</th>
+                                <th>Kategori</th>
+                                <th class="text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data loaded via DataTables -->
+                        </tbody>
+                    </table>
                 </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert" id="error-alert">
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
-            <div class="table-responsive">
-                <table class="table table-hover align-middle border shadow-sm rounded" id="tokoTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center">No</th>
-                            <th>Nama Toko</th>
-                            <th>Pemilik</th>
-                            <th>Kategori</th>
-                            <th>Staus</th>
-                            <th class="text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data loaded via DataTables -->
-                    </tbody>
-                </table>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 @endsection
 
 <!-- Modal Delete -->
@@ -95,13 +94,30 @@
                 scrollX: false,
                 scrollY: false,
                 ajax: '{!! route('toko.index') !!}',
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', className: "text-center" },
-                    { data: 'nama_toko', name: 'nama_toko' },
-                    { data: 'nama_pemilik', name: 'nama_pemilik' },
-                    { data: 'nama_kategori_toko', name: 'nama_kategori_toko' },
-                    { data: 'status_aktif_toko', name: 'status_aktif_toko' },
-                    { data: 'action', name: 'action', orderable: false, searchable: false, className: "text-center" }
+                columns: [{
+                        data: 'DT_RowIndex',
+                        name: 'DT_RowIndex',
+                        className: "text-center"
+                    },
+                    {
+                        data: 'nama_toko',
+                        name: 'nama_toko'
+                    },
+                    {
+                        data: 'nama_pemilik',
+                        name: 'nama_pemilik'
+                    },
+                    {
+                        data: 'nama_kategori_toko',
+                        name: 'nama_kategori_toko'
+                    },
+                    {
+                        data: 'action',
+                        name: 'action',
+                        orderable: false,
+                        searchable: false,
+                        className: "text-center"
+                    }
                 ]
             });
 
