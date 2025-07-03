@@ -387,19 +387,38 @@
                                 };
 
                                 // Ambil data awal dari SSE
-                                const evtSource = new EventSource("{{ route('frontend.GetProdukFrontEnd') }}");
-                                evtSource.onmessage = function (event) {
-                                    const data = JSON.parse(event.data);
-                                    if (data.status === 'success') {
-                                        allProducts = data.produk;
-                                        renderProducts(allProducts);
-                                    } else {
-                                        console.error("Error fetching products:", data.message);
-                                    }
-                                };
-                                evtSource.onerror = function (err) {
-                                    console.error("SSE connection error:", err);
-                                };
+                              fetch("{{ route('frontend.GetProdukFrontEnd') }}")
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("HTTP error " + response.status);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            allProducts = data.produk;
+            renderProducts(allProducts);
+        } else {
+            console.error("Error fetching products:", data.message);
+        }
+    })
+    .catch(error => {
+        console.error("Fetch error:", error);
+    });
+// sd
+//                                 // const evtSource = new EventSource("{{ route('frontend.GetProdukFrontEnd') }}");
+//                                 // evtSource.onmessage = function (event) {
+//                                 //     const data = JSON.parse(event.data);
+//                                 //     if (data.status === 'success') {
+//                                 //         allProducts = data.produk;
+//                                 //         renderProducts(allProducts);
+//                                 //     } else {
+//                                 //         console.error("Error fetching products:", data.message);
+//                                 //     }
+//                                 // };
+//                                 // evtSource.onerror = function (err) {
+//                                 //     console.error("SSE connection error:", err);
+//                                 // };
 
                                 // Filter hanya saat tombol search diklik
                                 searchForm.addEventListener('submit', function (e) {
