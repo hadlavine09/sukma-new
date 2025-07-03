@@ -143,18 +143,58 @@ class TokoController extends Controller
         }
     }
 
-    public function show($kode_kategori)
+  public function show($kode_toko)
     {
-        // Ambil data kategori berdasarkan kode_kategori
-        $kategori = KategoriProduk::where('kode_kategori', $kode_kategori)->first();
+        // Ambil detail utama toko (1 baris)
+        $tokoshow = DB::table('tokos')
+            ->join('users', 'tokos.pemilik_toko_id', '=', 'users.id')
+            ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+            ->join('detail_tokos', 'tokos.id', '=', 'detail_tokos.toko_id')
+            ->where('tokos.kode_toko', $kode_toko)
+            ->whereNull('tokos.deleted_at')
+            ->whereNull('kategori_tokos.deleted_at')
+            ->select(
+                'tokos.*',
+                'users.username as nama_pemilik',
+                'kategori_tokos.nama_kategori_toko',
+                'detail_tokos.nama_ktp',
+                'detail_tokos.nomor_ktp',
+                'detail_tokos.nomor_kk',
+                'detail_tokos.foto_ktp',
+                'detail_tokos.foto_kk',
+                'detail_tokos.nama_bank',
+                'detail_tokos.nomor_rekening',
+                'detail_tokos.nama_pemilik_rekening',
+                'detail_tokos.email_cs',
+                'detail_tokos.whatsapp_cs',
+                'detail_tokos.link_instagram',
+                'detail_tokos.link_facebook',
+                'detail_tokos.link_tiktok',
+                'detail_tokos.link_google_maps',
+                'tokos.logo_toko'
 
-        // Validasi: jika data tidak ditemukan
-        if (! $kategori) {
-            return redirect()->back()->with('error', 'Data kategori tidak ditemukan.');
+            )
+            ->first();
+
+        if (! $tokoshow) {
+            return redirect()->back()->with('error', 'Toko tidak ditemukan.');
         }
 
-        // Tampilkan ke view
-        return view('backend.manajementtoko.toko.show', compact('kategori'));
+        // Ambil jam operasional per hari (banyak baris)
+        $jadwalOperasional = DB::table('jam_operasionals')
+            ->where('toko_id', $tokoshow->id)
+            ->orderByRaw("CASE
+        WHEN hari = 'Senin' THEN 1
+        WHEN hari = 'Selasa' THEN 2
+        WHEN hari = 'Rabu' THEN 3
+        WHEN hari = 'Kamis' THEN 4
+        WHEN hari = 'Jumat' THEN 5
+        WHEN hari = 'Sabtu' THEN 6
+        WHEN hari = 'Minggu' THEN 7
+        ELSE 8 END")
+            ->get();
+
+        return view('backend.manajementtoko.pendaftarantoko.show', compact('tokoshow', 'jadwalOperasional'));
     }
     public function edit($kode_kategori)
     {

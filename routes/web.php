@@ -190,7 +190,7 @@ Route::prefix('manajemen-toko')->group(function () {
         Route::get('create', [TokoController::class, 'create'])->name('toko.create');
         Route::post('store', [TokoController::class, 'store'])->name('toko.store');
         Route::get('edit/{id}', [TokoController::class, 'edit'])->name('toko.edit');
-        Route::get('show', [TokoController::class, 'show'])->name('toko.show');
+        Route::get('show/{kode_toko}', [TokoController::class, 'show'])->name('toko.show');
         Route::put('update/{id}', [TokoController::class, 'update'])->name('toko.update');
         Route::post('destroy', [TokoController::class, 'destroy'])->name('toko.destroy');
     });
