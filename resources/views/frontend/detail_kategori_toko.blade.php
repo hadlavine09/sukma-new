@@ -341,28 +341,61 @@
         selectedSubKategori = this.value;
         filterAndRenderProducts();
     });
-
-    // Ambil data dari SSE
     const kategoriTokoTarget = `{!! strtolower($kategori_toko->nama_kategori_toko) !!}`;
-    const evtSource = new EventSource("{{ route('frontend.GetProdukFrontEnd') }}");
 
-    evtSource.onmessage = function (event) {
-        const data = JSON.parse(event.data);
-        if (data.status === 'success') {
-            allProducts = data.produk.filter(item =>
-                item.kategori_toko &&
-                item.kategori_toko.nama_kategori_toko &&
-                item.kategori_toko.nama_kategori_toko.toLowerCase() === kategoriTokoTarget
-            );
-            filterAndRenderProducts();
-        } else {
-            console.error("Gagal ambil produk:", data.message);
-        }
-    };
+function fetchProduk() {
+    fetch("{{ route('frontend.GetProdukFrontEnd') }}")
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("HTTP error " + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.status === 'success') {
+                allProducts = data.produk.filter(item =>
+                    item.kategori_toko &&
+                    item.kategori_toko.nama_kategori_toko &&
+                    item.kategori_toko.nama_kategori_toko.toLowerCase() === kategoriTokoTarget
+                );
+                filterAndRenderProducts();
+            } else {
+                console.error("Gagal ambil produk:", data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+        });
+}
 
-    evtSource.onerror = function (err) {
-        console.error("SSE connection error:", err);
-    };
+// Panggil sekali saat halaman dimuat
+fetchProduk();
+
+// (Opsional) Polling tiap 5 detik seperti SSE
+// setInterval(fetchProduk, 5000);
+
+// s
+//     // Ambil data dari SSE
+//     // const kategoriTokoTarget = `{!! strtolower($kategori_toko->nama_kategori_toko) !!}`;
+//     // const evtSource = new EventSource("{{ route('frontend.GetProdukFrontEnd') }}");
+
+//     // evtSource.onmessage = function (event) {
+//     //     const data = JSON.parse(event.data);
+//     //     if (data.status === 'success') {
+//     //         allProducts = data.produk.filter(item =>
+//     //             item.kategori_toko &&
+//     //             item.kategori_toko.nama_kategori_toko &&
+//     //             item.kategori_toko.nama_kategori_toko.toLowerCase() === kategoriTokoTarget
+//     //         );
+//     //         filterAndRenderProducts();
+//     //     } else {
+//     //         console.error("Gagal ambil produk:", data.message);
+//     //     }
+//     // };
+
+//     // evtSource.onerror = function (err) {
+//     //     console.error("SSE connection error:", err);
+//     // };
 
     // Setup events untuk tombol +/-
     function setupProductEvents() {
