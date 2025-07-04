@@ -9,32 +9,30 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('transaksis', function (Blueprint $table) {
-            $table->id();
-            $table->string('kode_transaksi')->unique(); // Unique transaction code (for reference)
-            $table->unsignedBigInteger('user_id'); // Foreign key to users table
-            $table->string('kode_produk');
-            $table->integer('quantity')->default(1);
-            $table->decimal('harga_produk', 12, 2);
-            $table->decimal('total_harga_produk', 12, 2);
-            $table->enum('status', ['proses', 'success', 'failed']); // Status of the transaction
+   public function up(): void
+{
+    Schema::create('transaksis', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        $table->foreignId('alamat_id')->constrained('alamats')->onDelete('cascade');
 
-            // Add user details fields
-            $table->string('nama')->nullable(); // User's name
-            $table->string('alamat')->nullable(); // User's address
-            $table->string('no_hp')->nullable(); // User's phone number
-            $table->string('catatan')->nullable(); // User's phone number
+        $table->string('kode_transaksi')->unique();
+        $table->enum('metode_pembayaran', ['cod', 'transfer', 'ewallet']);
 
-            // Define foreign keys
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('kode_produk')->references('kode_produk')->on('produks')->onDelete('cascade');
+        // Ringkasan
+        $table->integer('subtotal'); // Sebelum diskon
+        $table->integer('diskon')->default(0);
+        $table->integer('total_bayar');
 
-            $table->timestamps(); // created_at, updated_at
-            $table->softDeletes(); // to support soft delete
-        });
-    }
+        // Status proses pesanan
+        $table->enum('status', ['menunggu', 'diproses', 'dikirim', 'selesai', 'batal'])->default('menunggu');
+
+        $table->json('produk'); // [{nama_produk, kode_produk, harga_satuan, jumlah, total_harga, catatan}, ...]
+
+        $table->timestamps();
+        $table->softDeletes(); // jika kamu ingin fitur soft delete
+    });
+}
 
     /**
      * Reverse the migrations.

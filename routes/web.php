@@ -94,7 +94,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('tambahkeranjang', [CartController::class, 'tambahkeranjang'])->name('frontend.tambahkeranjang');
         Route::get('keranjang', [CartController::class, 'keranjang'])->name('frontend.keranjang');
         Route::get('keranjang_down', [CartController::class, 'keranjang_dropdown'])->name('frontend.keranjang_down');
-        Route::get('checkout', [CartController::class, 'checkout'])->name('frontend.checkout');
+        Route::post('prepare-checkout', [CartController::class, 'prepareCheckout'])->name('frontend.prepareCheckout');
+        Route::get('checkout/{kode}', [CartController::class, 'checkout'])->name('frontend.checkout');
+        // Rute untuk menyimpan alamat yang dipilih
+        Route::post('/checkout/simpan-alamat', [CartController::class, 'simpanAlamat'])->name('checkout.simpanAlamat');
+        Route::post('/checkout/pilih-alamat', [CartController::class, 'pilihAlamat'])->name('checkout.pilihAlamat');
+        Route::post('/checkout/pilih-voucher', [CartController::class, 'pilihVoucher'])->name('checkout.pilihVoucher');
+
+
+        Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('frontend.checkoutstore');
         Route::post('cartupdate', [CartController::class, 'cartupdate'])->name('frontend.cartupdate');
         Route::delete('keranjang/destroy/{id}', [CartController::class, 'destroy'])->name('frontend.cartdestroy');
         Route::get('/profile', function () {
@@ -256,8 +264,8 @@ Route::prefix('Manajemen-Transaksi')->group(function () {
     Route::prefix('Cart')->group(function () {
         Route::get('/', [CartController::class, 'index'])->name('cart.index');
         Route::get('create', [CartController::class, 'create'])->name('cart.create');
-        Route::get('checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-        Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('cart.checkoutstore');
+        // Route::get('checkout/{selected}', [CartController::class, 'checkout'])->name('cart.checkout');
+        // Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('cart.checkoutstore');
         Route::post('store', [CartController::class, 'store'])->name('cart.store');
         Route::put('update/{id}', [CartController::class, 'update'])->name('cart.update');
         Route::delete('destroy/{id}', [CartController::class, 'destroy'])->name('cart.destroy');

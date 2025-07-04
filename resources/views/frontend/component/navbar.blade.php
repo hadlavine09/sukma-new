@@ -72,7 +72,7 @@
                         <pre id="cartJsonData" style="font-size:12px; background:#f8f9fa; border-radius:4px; padding:8px; overflow:auto;"></pre>
                     </div>
                 </div>
-                <style>
+                {{-- <style>
                     /* ... (cart dropdown styles remain unchanged) ... */
                     .cart-dropdown-card {
                         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.18);
@@ -287,7 +287,7 @@
                             hideTimeout = setTimeout(hideCartCard, 120);
                         });
                     });
-                </script>
+                </script> --}}
             </div>
             <!-- End Cart Dropdown -->
 

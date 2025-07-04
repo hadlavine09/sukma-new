@@ -57,20 +57,181 @@ class CartController extends Controller
         $produks = Produk::all();
         return view('backend.manajementtransaksi.cart.create', compact('produks', 'users'));
     }
-    public function checkout()
-    {
-        // Ambil semua user
-        $users = User::all();
 
-        // Ambil data carts yang belum checkout dengan relasi produk dan user
-        $carts = DB::table('carts')->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')->join('users', 'carts.user_id', '=', 'users.id')->select('carts.id as cart_id', 'carts.user_id', 'carts.quantity', 'carts.kode_produk', 'carts.harga_produk', 'produks.nama_produk', 'produks.harga_produk', 'users.name as user_name', 'users.email as user_email')->get();
+public function prepareCheckout(Request $request)
+{
+    $ids = $request->input('ids'); // array id dari JS
 
-        // Ambil semua voucher
-
-        // Kirim data ke view
-        return view('backend.manajementtransaksi.cart.checkout', compact('users', 'carts'));
+    if (empty($ids) || !is_array($ids)) {
+        return response()->json(['status' => 'error', 'message' => 'ID tidak valid'], 400);
     }
 
+    // Buat kode acak 100 karakter (termasuk simbol, huruf besar kecil, angka)
+    $kode = Str::random(70) . substr(md5(rand()), 0, 30); // Total 100 karakter
+
+    // Simpan mapping di session
+    session()->put('checkout_kode_' . $kode, $ids);
+
+    return response()->json(['status' => 'success', 'redirect' => route('frontend.checkout', ['kode' => $kode])]);
+}
+ public function checkout($kode)
+{
+    $ids = session('checkout_kode_' . $kode);
+
+    if (!$ids) {
+        abort(404, 'Kode checkout tidak ditemukan atau sudah kadaluarsa.');
+    }
+
+    $user = auth()->user();
+
+    // Ambil alamat list dari tabel 'alamats' berdasarkan user_id
+    $alamatList = DB::table('alamats')
+        ->where('user_id', $user->id)
+        ->limit(5)
+        ->get();
+
+    // // Cek jika user sudah memiliki alamat
+    // $alamatTersedia = $alamatList->isNotEmpty();
+
+    // // Ambil semua voucher
+    // $voucherList = DB::table('vouchers')->get();
+
+    // // Ambil voucher yang dipilih dari session (jika ada)
+    // $voucherTerpilih = collect($voucherList)->firstWhere('id', session('voucher_id'));
+
+    // // Ambil produk dari keranjang
+
+ // Ambil data produk beserta tag (left join)
+       // Ambil produk dengan tag dan relasi lainnya
+// 1️⃣ Ambil produk di keranjang user
+  $produkWithTagsRaw = DB::table('carts')
+        ->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')
+        ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+        ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+        ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
+        ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+        ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+        ->select(
+            'carts.id as cart_id',
+            'carts.quantity',
+            'carts.harga_produk as harga_di_cart',
+            'produks.kode_produk',
+            'produks.nama_produk',
+            'produks.deskripsi_produk',
+            'produks.stok_produk',
+            'produks.harga_produk',
+            'produks.gambar_produk',
+            'produks.status_produk',
+            'produks.status_draf_produk',
+            'produks.kategori_produk_id',
+            'produks.toko_id',
+            'tokos.nama_toko',
+            'tokos.deskripsi_toko',
+            'kategori_tokos.nama_kategori_toko',
+            'kategori_tokos.deskripsi_kategori_toko',
+            'kategori_produks.nama_kategori_produk',
+            'kategori_produks.deskripsi_kategori_produk',
+            'tags.id as tag_id',
+            'tags.nama_tag',
+            'tags.deskripsi_tag'
+        )
+        ->where('carts.user_id', $user->id)
+        ->whereIn('carts.id', $ids)
+        ->orderBy('produks.id', 'desc')
+        ->get();
+
+    // Grouping by cart id
+    $produkGrouped = [];
+    foreach ($produkWithTagsRaw as $item) {
+        $cartId = $item->cart_id;
+
+        if (!isset($produkGrouped[$cartId])) {
+            $produkGrouped[$cartId] = [
+                'cart_id' => $cartId,
+                'quantity' => $item->quantity,
+                'harga_di_cart' => $item->harga_di_cart,
+                'produk' => [
+                    'kode_produk' => $item->kode_produk,
+                    'nama_produk' => $item->nama_produk,
+                    'deskripsi_produk' => $item->deskripsi_produk,
+                    'stok_produk' => $item->stok_produk,
+                    'harga_produk' => $item->harga_produk,
+                    'gambar_produk' => $item->gambar_produk,
+                    'status_produk' => $item->status_produk,
+                    'status_draf_produk' => $item->status_draf_produk,
+                    'kategori_produk_id' => $item->kategori_produk_id,
+                    'toko' => [
+                        'id' => $item->toko_id,
+                        'nama_toko' => $item->nama_toko,
+                        'deskripsi_toko' => $item->deskripsi_toko,
+                    ],
+                    'kategori_toko' => [
+                        'nama_kategori_toko' => $item->nama_kategori_toko,
+                        'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+                    ],
+                    'kategori_produk' => [
+                        'nama_kategori_produk' => $item->nama_kategori_produk,
+                        'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+                    ],
+                    'tags' => [],
+                ]
+            ];
+        }
+
+        // Tambahkan tag kalau ada
+        if (!is_null($item->tag_id)) {
+            $produkGrouped[$cartId]['produk']['tags'][] = [
+                'id' => $item->tag_id,
+                'nama_tag' => $item->nama_tag,
+                'deskripsi_tag' => $item->deskripsi_tag,
+            ];
+        }
+    }
+
+    $produkResult = array_values($produkGrouped);
+
+    // Hitung total
+    $totalProduk = collect($produkResult)->sum(function ($item) {
+        return $item['harga_di_cart'] * $item['quantity'];
+    });
+    $totalPotongan = $voucherTerpilih->potongan ?? 0;
+    $totalBayar = $totalProduk - $totalPotongan;
+
+//    dd([
+//     'produk_grouped' => array_values($produkGrouped),
+//     'total_produk' => $totalProduk,
+//     'total_potongan' => $totalPotongan,
+//     'total_bayar' => $totalBayar,
+// ]);
+
+    return view('frontend.checkout');
+}
+
+
+
+    // Fungsi untuk menyimpan alamat yang dipilih
+    public function pilihAlamat(Request $request)
+    {
+        $request->validate([
+            'alamat_terpilih' => 'required|string'
+        ]);
+
+        session(['alamat_terpilih' => $request->alamat_terpilih]);
+
+        return redirect()->back();
+    }
+
+    // Fungsi untuk menyimpan voucher yang dipilih
+    public function pilihVoucher(Request $request)
+    {
+        $request->validate([
+            'voucher_id' => 'required|integer'
+        ]);
+
+        session(['voucher_id' => $request->voucher_id]);
+
+        return redirect()->back();
+    }
     public function store(Request $request)
     {
         $request->validate([
@@ -120,6 +281,28 @@ class CartController extends Controller
 
         return redirect()->route('cart.index')->with('success', 'Produk berhasil ditambahkan ke cart.');
     }
+    public function simpanAlamat(Request $request)
+{
+    $request->validate([
+        'nama' => 'required|string',
+        'alamat' => 'required|string',
+        'no_hp' => 'required|string'
+    ]);
+
+    // Simpan alamat baru
+    DB::table('alamats')->insert([
+        'user_id' => auth()->user()->id,
+        'nama' => $request->nama,
+        'alamat' => $request->alamat,
+        'no_hp' => $request->no_hp,
+    ]);
+
+    // Set session alamat_terpilih
+    session(['alamat_terpilih' => $request->alamat]);
+
+    return redirect()->route('checkout.index'); // Redirect ke halaman checkout
+}
+
     public function tambahkeranjang(Request $request)
     {
         $request->validate([
