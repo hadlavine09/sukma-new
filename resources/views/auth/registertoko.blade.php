@@ -2,10 +2,10 @@
 <html lang="id">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - SukMa</title>
-<meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar Penjual - SukMa</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
@@ -40,10 +40,9 @@
 </head>
 
 <body>
-<!-- Navbar Ukuran Sedang -->
+<!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm" style="padding-top: 0.7rem; padding-bottom: 0.7rem;">
     <div class="container d-flex justify-content-between align-items-center">
-
         <!-- Logo -->
         <a class="navbar-brand" href="{{ url('/') }}" style="padding: 0;">
             <svg xmlns="http://www.w3.org/2000/svg" width="100" height="45" viewBox="0 0 200 108">
@@ -53,74 +52,116 @@
         </a>
     </div>
 </nav>
-    <!-- Main Content -->
-    <section class="py-5">
-        <div class="container">
-            <div class="row justify-content-center align-items-center g-5">
 
-                <!-- Informasi -->
-                <div class="col-lg-6">
-                    <h2 class="fw-bold text-dark mb-3">Selamat Datang</h2>
-                    <p class="text-muted">Masuk ke akun Anda sebagai <strong>pengguna</strong> atau <strong>penjual</strong>.
-                        Nikmati pengalaman belanja atau kelola toko Anda di SukMa.</p>
-                    <ul class="list-unstyled mt-4">
-                        <li class="mb-3 d-flex">
-                            <i class="bi bi-person-check text-green fs-4 me-3"></i>
-                            <div>
-                                <h6 class="fw-semibold mb-1">Untuk Pengguna</h6>
-                                <small class="text-muted">Akses riwayat pesanan, ubah data pribadi, dan banyak lagi.</small>
-                            </div>
-                        </li>
-                        <li class="d-flex">
-                            <i class="bi bi-shop text-green fs-4 me-3"></i>
-                            <div>
-                                <h6 class="fw-semibold mb-1">Untuk Penjual</h6>
-                                <small class="text-muted">Kelola produk, pesanan, dan analisa penjualan Anda.</small>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
+<!-- Main Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center align-items-center g-5">
 
-                <!-- Form Login -->
-                <div class="col-lg-5">
-                    <div class="card p-4">
-                        <h4 class="mb-4 text-center">Login Akun Anda</h4>
-                        <form method="POST" action="{{ route('login.post') }}">
-                            @csrf
-
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email"
-                                    placeholder="Masukkan email Anda" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Kata Sandi</label>
-                                <input type="password" class="form-control" id="password" name="password"
-                                    placeholder="Masukkan kata sandi Anda" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-green w-100">Masuk</button>
-
-                            <div class="text-center mt-3">
-                                <span>Belum punya akun?</span>
-                                <div class="d-flex justify-content-center gap-2 mt-2">
-                                    <a href="{{ route('register2') }}" class="text-green fw-semibold">Daftar sebagai Pengguna</a>
-                                    <span>|</span>
-                                    <a href="{{ route('registertoko') }}" class="text-green fw-semibold">Daftar sebagai Penjual</a>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
+            <!-- Left Column -->
+            <div class="col-lg-6">
+                <h2 class="fw-bold text-dark mb-3">Daftar Sebagai Penjual</h2>
+                <p class="text-muted">Jual produkmu dengan mudah, kelola pesanan, dan kembangkan bisnismu bersama SukMa Marketplace.</p>
+                <ul class="list-unstyled mt-4">
+                    <li class="mb-3 d-flex">
+                        <i class="bi bi-shop text-green fs-4 me-3"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Buka Toko Online</h6>
+                            <small class="text-muted">Miliki toko online dan mulai jualan kapan saja.</small>
+                        </div>
+                    </li>
+                    <li class="mb-3 d-flex">
+                        <i class="bi bi-box-seam text-green fs-4 me-3"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Kelola Produk & Pesanan</h6>
+                            <small class="text-muted">Mudah atur produk, pesanan, dan pengiriman.</small>
+                        </div>
+                    </li>
+                    <li class="d-flex">
+                        <i class="bi bi-graph-up-arrow text-green fs-4 me-3"></i>
+                        <div>
+                            <h6 class="fw-semibold mb-1">Tingkatkan Penjualan</h6>
+                            <small class="text-muted">Gunakan fitur promosi untuk memperluas jangkauan pasar.</small>
+                        </div>
+                    </li>
+                </ul>
             </div>
-        </div>
-    </section>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <!-- Alert Messages -->
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if ($errors->has('register'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ $errors->first('register') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            <!-- Right Column (Register Form) -->
+            <div class="col-lg-5">
+                <div class="card p-4">
+                    <h4 class="mb-4 text-center">Daftar Penjual</h4>
+
+                    <form method="POST" action="{{ route('register.toko') }}">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="nama_toko" class="form-label">Nama Toko</label>
+                            <input type="text" class="form-control" id="nama_toko" name="nama_toko"
+                                placeholder="Masukkan nama toko" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="nama_pemilik" class="form-label">Nama Pemilik</label>
+                            <input type="text" class="form-control" id="nama_pemilik" name="nama_pemilik"
+                                placeholder="Masukkan nama pemilik" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Toko</label>
+                            <input type="email" class="form-control" id="email" name="email"
+                                placeholder="Masukkan email toko" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Kata Sandi</label>
+                            <input type="password" class="form-control" id="password" name="password"
+                                placeholder="Masukkan kata sandi" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password_confirmation" class="form-label">Konfirmasi Kata Sandi</label>
+                            <input type="password" class="form-control" id="password_confirmation"
+                                name="password_confirmation" placeholder="Konfirmasi kata sandi" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-green w-100">Daftar Penjual</button>
+
+                        <div class="text-center mt-4">
+                            <div class="mb-2">
+                                <span>Sudah punya akun toko?</span>
+                                <a href="{{ route('login') }}" class="text-success fw-semibold">Login di sini</a>
+                            </div>
+
+                            <div class="d-flex justify-content-center align-items-center gap-2 mt-2">
+                                <span>Daftar Sebagai Pembeli?</span>
+                                <a href="{{ route('register2') }}" class="text-success fw-semibold">Daftar sebagai Pengguna</a>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
-

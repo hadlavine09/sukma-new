@@ -18,7 +18,7 @@ class RegisterController extends Controller
 
     public function showRegisterToko()
     {
-        return view('toko.auth.register');
+        return view('auth.registertoko');
     }
 
     public function register(Request $request)

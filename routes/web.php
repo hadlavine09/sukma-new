@@ -35,14 +35,11 @@ use App\Http\Controllers\UserManagement\PermissionController;
 |
 */
 Auth::routes();
-Route::get('/', function () {
-    return view('frontend.produk');
-});
 Route::middleware('guest')->group(function () {
-    // Route::prefix('toko')->group(function () {
+    Route::get('/', [HomeController::class, 'index'])->name('home');
+    // Route::get('/redirectTo', [LoginController::class, 'redirectTo'])->name('redirectTo');
     Route::get('registertoko', [RegisterController::class, 'showRegisterToko'])->name('registertoko');
     Route::get('loginToko', [LoginController::class, 'showLoginToko'])->name('LoginToko');
-    // });
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::get('register', [RegisterController::class, 'showRegisterForm'])->name('register2');
     Route::post('/login', [LoginController::class, 'login'])->name('login.post');

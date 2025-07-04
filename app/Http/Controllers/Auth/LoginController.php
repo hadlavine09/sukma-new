@@ -10,13 +10,14 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginController extends Controller
 {
+
  protected function redirectTo()
     {
         $user = Auth::user();
 
         // Cegah error jika user tidak ditemukan
         if (!$user) {
-            return '/login';
+            return '/';
         }
 
         // Ambil role user dari relasi role_user
@@ -56,7 +57,7 @@ class LoginController extends Controller
         // Redirect default berdasarkan role lainnya
         return match ($roleName) {
             'superadmin', 'admin' => route('dashboard'),
-            'user'                => '/Home',
+            'user'                => '/',
             default               => '/',
         };
     }
@@ -114,9 +115,7 @@ class LoginController extends Controller
         // Hapus sesi pengguna dan regenerasi token CSRF
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        // Redirect ke halaman login menggunakan named route
-        return redirect()->route('login');
+            return redirect($this->redirectTo());
     }
 
     public function __construct()

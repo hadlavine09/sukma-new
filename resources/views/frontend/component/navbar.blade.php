@@ -1,7 +1,7 @@
 <nav class="shopee-navbar" role="navigation" aria-label="Main navigation">
     <div class="container">
         <div class="navbar-left">
-            <a href="{{ url('Home') }}">
+            <a href="{{ url('/') }}">
                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="120"
                     height="108" viewBox="0 0 200 108">
                     <image id="logosukma" x="58" y="15" width="127" height="79"
@@ -72,7 +72,186 @@
                         <pre id="cartJsonData" style="font-size:12px; background:#f8f9fa; border-radius:4px; padding:8px; overflow:auto;"></pre>
                     </div>
                 </div>
-                {{-- <style>
+
+            </div>
+            <!-- End Cart Dropdown -->
+
+            <!-- Profile Dropdown -->
+            <div class="profile-dropdown-wrapper" style="margin-left: 0.5rem;">
+                <style>
+                    .profile-btn {
+                        background-color: #e5e7eb;
+                        border-radius: 9999px;
+                        width: 2rem;
+                        height: 2rem;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: #000;
+                        font-weight: bold;
+                        cursor: pointer;
+                        position: relative;
+                        z-index: 101;
+                    }
+
+                    .profile-dropdown-wrapper {
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+
+                    .profile-dropdown {
+                        position: absolute;
+                        top: 110%;
+                        right: 0;
+                        min-width: 10rem;
+                        background-color: #fff;
+                        border: 1px solid #ddd;
+                        border-radius: 0.25rem;
+                        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+                        display: none;
+                        z-index: 100;
+                    }
+
+                    .profile-dropdown.show {
+                        display: block;
+                    }
+
+                    .profile-dropdown a {
+                        display: block;
+                        text-align: left;
+                        padding: 0.5rem 1rem;
+                        color: #333;
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    }
+
+                    .profile-dropdown button {
+                        width: 100%;
+                        display: block;
+                        text-align: left;
+                        padding: 0.5rem 1rem;
+                        color: #333;
+                        background: none;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    }
+
+                    .profile-dropdown a:hover,
+                    .profile-dropdown button:hover {
+                        background-color: #f3f4f6;
+                    }
+
+                    .profile-name {
+                        margin-left: 8px;
+                        font-weight: 500;
+                        color: #222;
+                        font-size: 15px;
+                        letter-spacing: 0.2px;
+                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+                    }
+
+                    .profile-email {
+                        margin-left: 12px;
+                        font-size: 14px;
+                        color: #555;
+                        font-weight: 400;
+                        white-space: nowrap;
+                    }
+
+                    @media (max-width: 900px) {
+                        nav > div {
+                            flex-direction: column;
+                            align-items: flex-start !important;
+                            gap: 10px;
+                        }
+                        nav > div > div {
+                            width: 100%;
+                            justify-content: flex-start !important;
+                            gap: 10px;
+                        }
+                        .profile-email {
+                            margin-left: 0;
+                            margin-top: 4px;
+                        }
+                    }
+                    @media (max-width: 600px) {
+                        nav > div {
+                            padding: 0 6px !important;
+                        }
+                        .profile-name {
+                            display: none;
+                        }
+                        .profile-email {
+                            display: none;
+                        }
+                        nav > div > div {
+                            font-size: 13px;
+                            gap: 6px;
+                        }
+                    }
+                </style>
+                @auth
+                    @php
+                        $emailInitial = strtoupper(substr(Auth::user()->email, 0, 1));
+                    @endphp
+                    <div class="profile-dropdown-wrapper">
+                        <div class="profile-btn" onclick="toggleDropdown(event)">
+                            {{ $emailInitial }}
+                        </div>
+                        <span class="profile-name">{{ Auth::user()->name }}</span>
+                        <div id="dropdown" class="profile-dropdown">
+                            <a href="">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-5 h-5 mr-2 text-gray-600"
+                                    fill="none" height="24" width="24" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5.121 17.804A4.992 4.992 0 0112 15a4.992 4.992 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
+                                </svg>
+                                Profil
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-5 h-5 mr-2 text-gray-600"
+                                        fill="none" height="24" width="24" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                    Logout
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('register2') }}" class="nav-login" tabindex="0">Daftar</a>
+                    <span class="mx-1 text-black">|</span>
+                    <a href="{{ route('login') }}" class="nav-login" tabindex="0">Login</a>
+                @endauth
+
+                <script>
+                    function toggleDropdown(event) {
+                        event.stopPropagation();
+                        var dropdown = document.getElementById("dropdown");
+                        dropdown.classList.toggle("show");
+                    }
+                    document.addEventListener('click', function(event) {
+                        var profileBtn = document.querySelector('.profile-btn');
+                        var dropdown = document.getElementById('dropdown');
+                        if (!profileBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                            dropdown.classList.remove('show');
+                        }
+                    });
+                </script>
+            </div>
+            <!-- End Profile Dropdown -->
+        </div>
+</nav>
+  {{-- <style>
                     /* ... (cart dropdown styles remain unchanged) ... */
                     .cart-dropdown-card {
                         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.18);
@@ -288,183 +467,3 @@
                         });
                     });
                 </script> --}}
-            </div>
-            <!-- End Cart Dropdown -->
-
-            <!-- Profile Dropdown -->
-            <div class="profile-dropdown-wrapper" style="margin-left: 0.5rem;">
-                <style>
-                    .profile-btn {
-                        background-color: #e5e7eb;
-                        border-radius: 9999px;
-                        width: 2rem;
-                        height: 2rem;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        color: #000;
-                        font-weight: bold;
-                        cursor: pointer;
-                        position: relative;
-                        z-index: 101;
-                    }
-
-                    .profile-dropdown-wrapper {
-                        position: relative;
-                        display: flex;
-                        align-items: center;
-                        gap: 8px;
-                    }
-
-                    .profile-dropdown {
-                        position: absolute;
-                        top: 110%;
-                        right: 0;
-                        min-width: 10rem;
-                        background-color: #fff;
-                        border: 1px solid #ddd;
-                        border-radius: 0.25rem;
-                        box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
-                        display: none;
-                        z-index: 100;
-                    }
-
-                    .profile-dropdown.show {
-                        display: block;
-                    }
-
-                    .profile-dropdown a {
-                        display: block;
-                        text-align: left;
-                        padding: 0.5rem 1rem;
-                        color: #333;
-                        background: none;
-                        border: none;
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                    }
-
-                    .profile-dropdown button {
-                        width: 100%;
-                        display: block;
-                        text-align: left;
-                        padding: 0.5rem 1rem;
-                        color: #333;
-                        background: none;
-                        border: none;
-                        cursor: pointer;
-                        font-size: 0.9rem;
-                    }
-
-                    .profile-dropdown a:hover,
-                    .profile-dropdown button:hover {
-                        background-color: #f3f4f6;
-                    }
-
-                    .profile-name {
-                        margin-left: 8px;
-                        font-weight: 500;
-                        color: #222;
-                        font-size: 15px;
-                        letter-spacing: 0.2px;
-                        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
-                    }
-
-                    .profile-email {
-                        margin-left: 12px;
-                        font-size: 14px;
-                        color: #555;
-                        font-weight: 400;
-                        white-space: nowrap;
-                    }
-
-                    @media (max-width: 900px) {
-                        nav > div {
-                            flex-direction: column;
-                            align-items: flex-start !important;
-                            gap: 10px;
-                        }
-                        nav > div > div {
-                            width: 100%;
-                            justify-content: flex-start !important;
-                            gap: 10px;
-                        }
-                        .profile-email {
-                            margin-left: 0;
-                            margin-top: 4px;
-                        }
-                    }
-                    @media (max-width: 600px) {
-                        nav > div {
-                            padding: 0 6px !important;
-                        }
-                        .profile-name {
-                            display: none;
-                        }
-                        .profile-email {
-                            display: none;
-                        }
-                        nav > div > div {
-                            font-size: 13px;
-                            gap: 6px;
-                        }
-                    }
-                </style>
-                @auth
-                    @php
-                        $emailInitial = strtoupper(substr(Auth::user()->email, 0, 1));
-                    @endphp
-                    <div class="profile-dropdown-wrapper">
-                        <div class="profile-btn" onclick="toggleDropdown(event)">
-                            {{ $emailInitial }}
-                        </div>
-                        <span class="profile-name">{{ Auth::user()->name }}</span>
-                        <div id="dropdown" class="profile-dropdown">
-                            <a href="">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-5 h-5 mr-2 text-gray-600"
-                                    fill="none" height="24" width="24" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5.121 17.804A4.992 4.992 0 0112 15a4.992 4.992 0 016.879 2.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
-                                </svg>
-                                Profil
-                            </a>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-5 h-5 mr-2 text-gray-600"
-                                        fill="none" height="24" width="24" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                    </svg>
-                                    Logout
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                @else
-                    <a href="{{ route('register2') }}" class="nav-login" tabindex="0">Register</a>
-                    <span class="mx-1 text-black">|</span>
-                    <a href="{{ route('LoginToko') }}" class="nav-login" tabindex="0">Daftar sebagai UMKM</a>
-                    <span class="mx-1 text-black">|</span>
-                    <a href="{{ route('login') }}" class="nav-login" tabindex="0">Login</a>
-                @endauth
-
-                <script>
-                    function toggleDropdown(event) {
-                        event.stopPropagation();
-                        var dropdown = document.getElementById("dropdown");
-                        dropdown.classList.toggle("show");
-                    }
-                    document.addEventListener('click', function(event) {
-                        var profileBtn = document.querySelector('.profile-btn');
-                        var dropdown = document.getElementById('dropdown');
-                        if (!profileBtn.contains(event.target) && !dropdown.contains(event.target)) {
-                            dropdown.classList.remove('show');
-                        }
-                    });
-                </script>
-            </div>
-            <!-- End Profile Dropdown -->
-        </div>
-</nav>
