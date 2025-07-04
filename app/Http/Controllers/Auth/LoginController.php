@@ -11,12 +11,12 @@ use Illuminate\Support\Facades\Validator;
 class LoginController extends Controller
 {
 
- protected function redirectTo()
+    protected function redirectTo()
     {
         $user = Auth::user();
 
         // Cegah error jika user tidak ditemukan
-        if (!$user) {
+        if (! $user) {
             return '/';
         }
 
@@ -28,7 +28,7 @@ class LoginController extends Controller
             ->first();
 
         // Cegah error jika role tidak ditemukan
-        if (!$role) {
+        if (! $role) {
             return '/';
         }
 
@@ -57,8 +57,8 @@ class LoginController extends Controller
         // Redirect default berdasarkan role lainnya
         return match ($roleName) {
             'superadmin', 'admin' => route('dashboard'),
-            'user'                => '/',
-            default               => '/',
+            'user'                      => '/',
+            default                     => '/',
         };
     }
 
@@ -81,7 +81,7 @@ class LoginController extends Controller
         if ($validator->fails()) {
             return back()->withErrors($validator)->withInput();
         }
-
+        // dd($request->all());
         if (Auth::attempt($request->only('email', 'password'))) {
             return redirect($this->redirectTo());
         }
@@ -115,7 +115,7 @@ class LoginController extends Controller
         // Hapus sesi pengguna dan regenerasi token CSRF
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-            return redirect($this->redirectTo());
+        return redirect($this->redirectTo());
     }
 
     public function __construct()
