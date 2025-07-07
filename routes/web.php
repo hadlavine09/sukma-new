@@ -7,9 +7,9 @@ use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TokoController;
 use App\Http\Controllers\ProdukController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransaksiMaterial;
 use App\Http\Controllers\IzinTokoController;
-use App\Http\Controllers\KategoriProdukController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SupplierController;
@@ -19,6 +19,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DetailProdukController;
 use App\Http\Controllers\KategoriTokoController;
+use App\Http\Controllers\KategoriProdukController;
 use App\Http\Controllers\UserManagement\RoleController;
 use App\Http\Controllers\UserManagement\UserController;
 use App\Http\Controllers\UserManagement\HakAksesController;
@@ -46,7 +47,6 @@ Route::middleware('guest')->group(function () {
     Route::post('/register-action', [RegisterController::class, 'register'])->name('register.post');
     Route::post('/login-toko', [LoginController::class, 'logintoko'])->name('logintoko.post');
     Route::post('/register-toko', [RegisterController::class, 'registertoko'])->name('register.toko');
-
 });
 
 Route::get('lang/{lang}', function ($lang) {
@@ -72,12 +72,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/aksesDashboard', [DashboardController::class, 'aksesDashboard'])->name('aksesDashboard');
     });
     Route::middleware('role:toko')->group(function () {
-
         // Route::get('/dashboard-toko', [IzinTokoController::class, 'dashboard_toko'])->name('dashboardtoko');
         Route::get('/verifikasi-toko', [IzinTokoController::class, 'verifikasi_toko'])->name('verifikasitoko');
         Route::post('/verifikasi-toko/{step}', [IzinTokoController::class, 'verifikasi_toko_store'])->name('verifikasitokostore');
         Route::get('/verifikasi-toko/wait', [IzinTokoController::class, 'waitPage'])->name('verifikasi_toko.wait');
-
     });
 
     // Routes yang hanya untuk role "user"
@@ -98,14 +96,28 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/checkout/pilih-alamat', [CartController::class, 'pilihAlamat'])->name('checkout.pilihAlamat');
         Route::post('/checkout/pilih-voucher', [CartController::class, 'pilihVoucher'])->name('checkout.pilihVoucher');
 
-
         Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('frontend.checkoutstore');
         Route::post('cartupdate', [CartController::class, 'cartupdate'])->name('frontend.cartupdate');
         Route::delete('keranjang/destroy/{id}', [CartController::class, 'destroy'])->name('frontend.cartdestroy');
-        Route::get('/profile', function () {
-            return view('frontend.profile');
-        });
 
+        Route::prefix('profile')->group(function () {
+            Route::get('/', function () {
+                return view('frontend.profile.profile');
+            })->name('profile.index');
+            Route::get('/get-users', [ProfileController::class, 'getUsers'])->name('profile.getUsers');
+
+            // Menu sidebar lainnya
+            Route::get('/bank-kartu', [ProfileController::class, 'bankKartu'])->name('profile.bank-kartu');
+            Route::get('/alamat', [ProfileController::class, 'alamat'])->name('profile.alamat');
+            Route::get('/ubah-password', [ProfileController::class, 'ubahPassword'])->name('profile.ubah-password');
+            Route::get('/notifikasi-setting', [ProfileController::class, 'notifikasiSetting'])->name('profile.notifikasi-setting');
+            Route::get('/privasi-setting', [ProfileController::class, 'privasiSetting'])->name('profile.privasi-setting');
+
+            Route::get('/pesanan', [ProfileController::class, 'pesanan'])->name('profile.pesanan');
+            Route::get('/notifikasi', [ProfileController::class, 'notifikasi'])->name('profile.notifikasi');
+            Route::get('/voucher', [ProfileController::class, 'voucher'])->name('profile.voucher');
+            Route::get('/koin', [ProfileController::class, 'koin'])->name('profile.koin');
+        });
     });
 
     // Logout route
@@ -135,7 +147,6 @@ Route::prefix('UserManagement')->group(function () {
         Route::get('show/{id}', [PermissionController::class, 'show'])->name('permission.show');
         Route::post('destroy', [PermissionController::class, 'destroy'])->name('permission.destroy');
         Route::put('update/{id}', [PermissionController::class, 'update'])->name('permission.update');
-
     });
 
     Route::prefix('Hakakses')->group(function () {
@@ -199,12 +210,9 @@ Route::prefix('manajemen-toko')->group(function () {
         Route::put('update/{id}', [TokoController::class, 'update'])->name('toko.update');
         Route::post('destroy', [TokoController::class, 'destroy'])->name('toko.destroy');
     });
-
 });
 
 Route::prefix('manajemen-produk')->group(function () {
-
-
     Route::prefix('produk')->group(function () {
         Route::post('/produk/tagkategori', [ProdukController::class, 'tagkategori'])->name('produk.tagkategori');
 
@@ -225,7 +233,6 @@ Route::prefix('manajemen-produk')->group(function () {
         Route::get('edit/{id}', [SupplierController::class, 'edit'])->name('supplier.edit');
         Route::get('show/{id}', [SupplierController::class, 'show'])->name('supplier.show');
     });
-
 });
 
 Route::prefix('Manajemen-Material')->group(function () {
