@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', function () {
                 return view('frontend.profile.profile');
             })->name('profile.index');
+
             Route::get('/get-users', [ProfileController::class, 'getUsers'])->name('profile.getUsers');
 
             // Menu sidebar lainnya
@@ -114,6 +115,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/privasi-setting', [ProfileController::class, 'privasiSetting'])->name('profile.privasi-setting');
 
             Route::get('/pesanan', [ProfileController::class, 'pesanan'])->name('profile.pesanan');
+            Route::get('/pesanan/{id}', [ProfileController::class, 'detailPesanan'])->name('profile.pesanan.detail');
             Route::get('/notifikasi', [ProfileController::class, 'notifikasi'])->name('profile.notifikasi');
             Route::get('/voucher', [ProfileController::class, 'voucher'])->name('profile.voucher');
             Route::get('/koin', [ProfileController::class, 'koin'])->name('profile.koin');
