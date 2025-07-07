@@ -90,20 +90,6 @@ public function prepareCheckout(Request $request)
         ->limit(5)
         ->get();
 
-    // // Cek jika user sudah memiliki alamat
-    // $alamatTersedia = $alamatList->isNotEmpty();
-
-    // // Ambil semua voucher
-    // $voucherList = DB::table('vouchers')->get();
-
-    // // Ambil voucher yang dipilih dari session (jika ada)
-    // $voucherTerpilih = collect($voucherList)->firstWhere('id', session('voucher_id'));
-
-    // // Ambil produk dari keranjang
-
- // Ambil data produk beserta tag (left join)
-       // Ambil produk dengan tag dan relasi lainnya
-// 1️⃣ Ambil produk di keranjang user
   $produkWithTagsRaw = DB::table('carts')
         ->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')
         ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
@@ -196,15 +182,9 @@ public function prepareCheckout(Request $request)
     });
     $totalPotongan = $voucherTerpilih->potongan ?? 0;
     $totalBayar = $totalProduk - $totalPotongan;
+    $getprodukGrouped = array_values($produkGrouped);
 
-//    dd([
-//     'produk_grouped' => array_values($produkGrouped),
-//     'total_produk' => $totalProduk,
-//     'total_potongan' => $totalPotongan,
-//     'total_bayar' => $totalBayar,
-// ]);
-
-    return view('frontend.checkout');
+    return view('frontend.checkout',compact('getprodukGrouped','totalProduk','totalPotongan','totalBayar'));
 }
 
 

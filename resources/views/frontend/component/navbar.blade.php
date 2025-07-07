@@ -205,7 +205,7 @@
                         </div>
                         <span class="profile-name">{{ Auth::user()->name }}</span>
                         <div id="dropdown" class="profile-dropdown">
-                            <a href="">
+                            <a href="{{ url('/profile') }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="inline-block w-5 h-5 mr-2 text-gray-600"
                                     fill="none" height="24" width="24" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
