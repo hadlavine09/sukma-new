@@ -85,27 +85,31 @@
         <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img src="{{ asset('assets_frontend/images/hero-img-1.png') }}" 
+                    <img src="{{ asset('assets_frontend/images/hero-img-1.png') }}"
                         alt="Eco Products 1">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar1.jpg') }}" 
+                    <img src="{{ asset('assets_frontend/images/gambar1.jpg') }}"
                         alt="Eco Products 2">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar2.jpg') }}" 
+                    <img src="{{ asset('assets_frontend/images/gambar2.jpg') }}"
                         alt="Eco Products 3">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar3.jpg') }}" 
+                    <img src="{{ asset('assets_frontend/images/gambar3.jpg') }}"
                         alt="Eco Products 4">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/banner-image-1.jpg') }}" 
+                    <img src="{{ asset('assets_frontend/images/gambar4.jpg') }}"
+                        alt="Eco Products 4">
+                </div>
+                <div class="carousel-item">
+                    <img src="{{ asset('assets_frontend/images/banner-image-1.jpg') }}"
                         alt="Eco Products 5">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/banner-image-2.jpg') }}" 
+                    <img src="{{ asset('assets_frontend/images/banner-image-2.jpg') }}"
                         alt="Eco Products 6">
                 </div>
             </div>
