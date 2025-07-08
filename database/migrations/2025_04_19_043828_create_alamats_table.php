@@ -18,16 +18,10 @@ return new class extends Migration
             $table->string('nama_penerima');
             $table->string('no_hp');
             $table->text('alamat_lengkap');
-            $table->string('kode_pos')->nullable();
-
-            // Opsional jika ingin detail wilayah
-            $table->string('provinsi')->nullable();
-            $table->string('kota')->nullable();
-            $table->string('kecamatan')->nullable();
-            $table->string('kelurahan')->nullable();
-
             $table->boolean('is_utama')->default(false); // Untuk alamat default
             $table->timestamps();
+                        $table->softDeletes();
+
 });
 
     }

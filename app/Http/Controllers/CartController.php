@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Alamat;
 use App\Models\Produk;
 use App\Models\Kategori;
 use Illuminate\Support\Str;
@@ -85,10 +86,12 @@ public function prepareCheckout(Request $request)
     $user = auth()->user();
 
     // Ambil alamat list dari tabel 'alamats' berdasarkan user_id
-    $alamatList = DB::table('alamats')
-        ->where('user_id', $user->id)
+    $alamatList = Alamat::where('user_id', $user->id)
         ->limit(5)
-        ->get();
+        ->orderByDesc('is_utama') // alamat utama dulu
+    ->latest()                // lalu berdasarkan terbaru
+    ->get();
+        // dd($alamatList);
 // Query tetap sama
 // Di Controller Laravel (misalnya CartController.php)
 
@@ -190,9 +193,8 @@ $getprodukGrouped = array_values(array_map(function ($item) {
 // dd($getprodukGrouped);
 
 // dd($getprodukGrouped);
-return view('frontend.checkout', compact('getprodukGrouped'));
+return view('frontend.checkout', compact('getprodukGrouped','alamatList'));
 }
-
 
 
     // Fungsi untuk menyimpan alamat yang dipilih
