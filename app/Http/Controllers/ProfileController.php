@@ -4,12 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
     public function getUsers()
     {
         $users = DB::table('users')->get(['id', 'name', 'email', 'username', 'no_hp', 'no_ktp', 'profile', 'email_verified_at', 'password', 'google_id', 'avatar', 'remember_token', 'created_at', 'updated_at']);
+
+        // Tambahkan field `foto_ktp` dummy secara manual ke tiap user
+        $users->transform(function ($user) {
+            $user->foto_ktp = asset('assets_profile/images/dummy-ktp.jpg'); // path ke dummy KTP
+            return $user;
+        });
 
         return response()->json($users);
     }
@@ -20,8 +27,111 @@ class ProfileController extends Controller
     }
     public function alamat()
     {
-        return view('frontend.profile.alamat');
+        $userId = Auth::id();
+
+        // Dummy data dengan struktur flat (user_id bisa sama lebih dari satu)
+        $dummyAlamat = [
+            [
+                'user_id' => 1,
+                'nama_penerima' => 'Rina Kartika',
+                'telepon' => '081234567890',
+                'alamat_lengkap' => 'Jl. Mawar No. 10, RT 03 RW 05, Kel. Sukamukti, Kec. Sukamukti',
+                'kecamatan' => 'Sukamukti',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40286',
+                'label' => 'Rumah',
+                'utama' => true,
+            ],
+            [
+                'user_id' => 2,
+                'nama_penerima' => 'Dedi Setiawan',
+                'telepon' => '082345678912',
+                'alamat_lengkap' => 'Perumahan Melati Blok B2 No.5, Kel. Sukasari',
+                'kecamatan' => 'Sukasari',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40152',
+                'label' => 'Kantor',
+                'utama' => false,
+            ],
+            [
+                'user_id' => 2,
+                'nama_penerima' => 'Ibu Rini',
+                'telepon' => '081999888777',
+                'alamat_lengkap' => 'Jl. Cempaka No. 22, Kec. Cibiru',
+                'kecamatan' => 'Cibiru',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40625',
+                'label' => 'Rumah',
+                'utama' => true,
+            ],
+            [
+                'user_id' => 3,
+                'nama_penerima' => 'Agus Suryana',
+                'telepon' => '089612345678',
+                'alamat_lengkap' => 'Desa Sukamulya RT 04 RW 02',
+                'kecamatan' => 'Ciparay',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40381',
+                'label' => 'Kampung',
+                'utama' => true,
+            ],
+            [
+                'user_id' => 4,
+                'nama_penerima' => 'Nur Nurhaliza',
+                'telepon' => '087811223344',
+                'alamat_lengkap' => 'Jl. Anggrek No. 8, Kompleks Sakura',
+                'kecamatan' => 'Antapani',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40291',
+                'label' => 'Apartemen',
+                'utama' => false,
+            ],
+            [
+                'user_id' => 4,
+                'nama_penerima' => 'Siti Nurhaliza',
+                'telepon' => '087811223344',
+                'alamat_lengkap' => 'Jl. Anggrek No. 8, Kompleks Sakura',
+                'kecamatan' => 'Antapani',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40291',
+                'label' => 'Apartemen',
+                'utama' => true,
+            ],
+            [
+                'user_id' => 4,
+                'nama_penerima' => 'Nur Halimah',
+                'telepon' => '085622334455',
+                'alamat_lengkap' => 'Jl. Dahlia No. 12',
+                'kecamatan' => 'Kiaracondong',
+                'kota' => 'Bandung',
+                'provinsi' => 'Jawa Barat',
+                'kode_pos' => '40285',
+                'label' => 'Toko',
+                'utama' => false,
+            ],
+        ];
+
+        // Filter hanya alamat milik user yang sedang login
+        $alamat_user = array_values(
+            array_filter($dummyAlamat, function ($item) use ($userId) {
+                return $item['user_id'] === $userId;
+            }),
+        );
+
+        // Jika hanya satu alamat, tetapkan sebagai utama
+        if (count($alamat_user) === 1) {
+            $alamat_user[0]['utama'] = true;
+        }
+
+        return view('frontend.profile.alamat', compact('alamat_user'));
     }
+
     public function ubahPassword()
     {
         return view('frontend.profile.ubah_password');

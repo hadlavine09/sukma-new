@@ -7,8 +7,8 @@
                 <div class="col-12 col-md-4 col-lg-3 mb-4">
                     <div class="bg-white p-3 shadow-sm border rounded h-100">
                         <div class="d-flex align-items-center mb-3 flex-wrap">
-                            <img src="{{ asset('images/default-profile.png') }}" class="rounded-circle me-2 mb-2 mb-md-0" width="40"
-                                height="40" alt="Profile">
+                            <img src="{{ asset('images/default-profile.png') }}" class="rounded-circle me-2 mb-2 mb-md-0"
+                                width="40" height="40" alt="Profile">
                             <div>
                                 <strong>{{ $user->username ?? 'Username' }}</strong><br>
                                 <a href="#" class="text-primary text-decoration-none small">✎ Ubah Profil</a>
@@ -20,44 +20,51 @@
                             <li class="nav-item">
                                 <a href="{{ route('profile.index') }}"
                                     class="nav-link px-0{{ request()->routeIs('profile.index') ? ' active text-danger' : ' text-dark' }}">Profil</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.bank-kartu') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.bank-kartu') ? ' active text-danger' : ' text-dark' }}">Bank & Kartu</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.alamat') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.alamat') ? ' active text-danger' : ' text-dark' }}">Alamat</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.ubah-password') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.ubah-password') ? ' active text-danger' : ' text-dark' }}">Ubah Password</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.notifikasi-setting') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.notifikasi-setting') ? ' active text-danger' : ' text-dark' }}">Pengaturan Notifikasi</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.privasi-setting') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.privasi-setting') ? ' active text-danger' : ' text-dark' }}">Pengaturan Privasi</a>
-                                </li>
-                                <li class="nav-item mt-3"><strong class="text-muted">Pesanan Saya</strong></li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.pesanan') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.pesanan') ? ' active text-danger' : ' text-dark' }}">Pesanan Saya</a>
-                                </li>
-                                <li class="nav-item mt-3"><strong class="text-muted">Lainnya</strong></li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.notifikasi') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.notifikasi') ? ' active text-danger' : ' text-dark' }}">Notifikasi</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.voucher') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.voucher') ? ' active text-danger' : ' text-dark' }}">Voucher Saya</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a href="{{ route('profile.koin') }}"
-                                        class="nav-link px-0{{ request()->routeIs('profile.koin') ? ' active text-danger' : ' text-dark' }}">Koin Shopee Saya</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.bank-kartu') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.bank-kartu') ? ' active text-danger' : ' text-dark' }}">Bank
+                                    & Kartu</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.alamat') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.alamat') ? ' active text-danger' : ' text-dark' }}">Alamat</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.ubah-password') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.ubah-password') ? ' active text-danger' : ' text-dark' }}">Ubah
+                                    Password</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.notifikasi-setting') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.notifikasi-setting') ? ' active text-danger' : ' text-dark' }}">Pengaturan
+                                    Notifikasi</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.privasi-setting') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.privasi-setting') ? ' active text-danger' : ' text-dark' }}">Pengaturan
+                                    Privasi</a>
+                            </li>
+                            <li class="nav-item mt-3"><strong class="text-muted">Pesanan Saya</strong></li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.pesanan') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.pesanan') ? ' active text-danger' : ' text-dark' }}">Pesanan
+                                    Saya</a>
+                            </li>
+                            <li class="nav-item mt-3"><strong class="text-muted">Lainnya</strong></li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.notifikasi') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.notifikasi') ? ' active text-danger' : ' text-dark' }}">Notifikasi</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.voucher') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.voucher') ? ' active text-danger' : ' text-dark' }}">Voucher
+                                    Saya</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('profile.koin') }}"
+                                    class="nav-link px-0{{ request()->routeIs('profile.koin') ? ' active text-danger' : ' text-dark' }}">Koin
+                                    Saya</a>
                             </li>
                             <style>
                                 #sidebarNav .nav-link {
@@ -85,6 +92,7 @@
                     </div>
                 </div>
 
+                <!-- Konten Kanan -->
                 <!-- Konten Kanan -->
                 <div class="col-12 col-md-8 col-lg-9">
                     <div class="row gy-4">
@@ -117,41 +125,55 @@
                                             <td id="profileKtp">-</td>
                                         </tr>
                                         <tr>
+                                            <th class="text-muted">Foto KTP</th>
+                                            <td>
+                                                <img id="profileKtpImg"
+                                                    src="{{ asset('assets_profile/images/placeholder-ktp.jpg') }}"
+                                                    alt="Foto KTP" class="img-thumbnail" style="max-width: 200px;">
+                                            </td>
+                                        </tr>
+                                        <tr>
                                             <th class="text-muted">Tanggal Dibuat</th>
                                             <td id="profileCreatedAt">-</td>
                                         </tr>
                                     </table>
                                 </div>
                                 <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    function formatTanggalIndonesia(dateString) {
-                                        if (!dateString) return '-';
-                                        const bulanIndo = [
-                                            'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                                            'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
-                                        ];
-                                        const date = new Date(dateString);
-                                        if (isNaN(date)) return '-';
-                                        const hari = date.getDate();
-                                        const bulan = bulanIndo[date.getMonth()];
-                                        const tahun = date.getFullYear();
-                                        return `${hari} ${bulan} ${tahun}`;
-                                    }
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        function formatTanggalIndonesia(dateString) {
+                                            if (!dateString) return '-';
+                                            const bulanIndo = [
+                                                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                                                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+                                            ];
+                                            const date = new Date(dateString);
+                                            if (isNaN(date)) return '-';
+                                            const hari = date.getDate();
+                                            const bulan = bulanIndo[date.getMonth()];
+                                            const tahun = date.getFullYear();
+                                            return `${hari} ${bulan} ${tahun}`;
+                                        }
 
-                                    fetch('{{ route('profile.getUsers') }}')
-                                        .then(response => response.json())
-                                        .then(users => {
-                                            if (users.length > 0) {
-                                                const user = users[0];
-                                                document.getElementById('profileUsername').textContent = user.username ?? '-';
-                                                document.getElementById('profileName').textContent = user.name ?? '-';
-                                                document.getElementById('profileEmail').textContent = user.email ?? '-';
-                                                document.getElementById('profilePhone').textContent = user.no_hp ?? '-';
-                                                document.getElementById('profileKtp').textContent = user.no_ktp ?? '-';
-                                                document.getElementById('profileCreatedAt').textContent = formatTanggalIndonesia(user.created_at);
-                                            }
-                                        });
-                                });
+                                        fetch('{{ route('profile.getUsers') }}')
+                                            .then(response => response.json())
+                                            .then(users => {
+                                                if (users.length > 0) {
+                                                    const user = users[0];
+                                                    document.getElementById('profileUsername').textContent = user.username ?? '-';
+                                                    document.getElementById('profileName').textContent = user.name ?? '-';
+                                                    document.getElementById('profileEmail').textContent = user.email ?? '-';
+                                                    document.getElementById('profilePhone').textContent = user.no_hp ?? '-';
+                                                    document.getElementById('profileKtp').textContent = user.no_ktp ?? '-';
+                                                    document.getElementById('profileCreatedAt').textContent = formatTanggalIndonesia(user
+                                                        .created_at);
+
+                                                    // Tambahkan foto KTP jika tersedia
+                                                    if (user.foto_ktp) {
+                                                        document.getElementById('profileKtpImg').src = user.foto_ktp;
+                                                    }
+                                                }
+                                            });
+                                    });
                                 </script>
                             </div>
                         </div>
@@ -160,7 +182,8 @@
                         <div class="col-12 col-lg-4 order-1 order-lg-2 mb-4 mb-lg-0">
                             <div
                                 class="p-3 border rounded shadow-sm bg-white text-center h-100 d-flex flex-column justify-content-center align-items-center">
-                                <div class="d-flex flex-column align-items-center w-100" style="margin-bottom: 20px; margin-top: -10px;">
+                                <div class="d-flex flex-column align-items-center w-100"
+                                    style="margin-bottom: 20px; margin-top: -10px;">
                                     <img src="{{ asset('assets_profile/images/reviewer-2.jpg') }}"
                                         class="rounded-circle border img-fluid mb-4"
                                         style="max-width: 200px; height: auto; cursor: pointer;" alt="Profile"
@@ -185,9 +208,9 @@
                                 </div>
                             </div>
                         </div>
-
                     </div> <!-- row -->
-                </div> <!-- col-lg-9 -->
+                </div>
+                <!-- col-lg-9 -->
             </div> <!-- row -->
 
             <style>
@@ -195,26 +218,33 @@
                     .order-1 {
                         order: 1 !important;
                     }
+
                     .order-2 {
                         order: 2 !important;
                     }
                 }
+
                 @media (max-width: 767.98px) {
+
                     .table th,
                     .table td {
                         display: block;
                         width: 100%;
                     }
+
                     .table th {
                         border-top: none;
                     }
+
                     .table tr {
                         margin-bottom: 1rem;
                         display: block;
                     }
+
                     .nav-tabs {
                         flex-wrap: nowrap;
                     }
+
                     .nav-tabs .nav-item {
                         flex: 0 0 auto;
                     }

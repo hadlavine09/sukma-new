@@ -64,7 +64,7 @@
                             <li class="nav-item">
                                 <a href="{{ route('profile.koin') }}"
                                     class="nav-link px-0{{ request()->routeIs('profile.koin') ? ' active text-danger' : ' text-dark' }}">Koin
-                                    Shopee Saya</a>
+                                    Saya</a>
                             </li>
                             <style>
                                 #sidebarNav .nav-link {
