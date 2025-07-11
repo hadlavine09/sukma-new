@@ -71,21 +71,57 @@
                             </div>
                             <div class="mb-3">
                                 <label class="form-label">Kategori Toko</label>
-                                <select name="kategori_toko_id" class="form-select" required>
-                                    <option value="">-- Pilih Kategori --</option>
+                                <select name="kategori_toko_id" id="kategori_toko_id" class="form-select" required>
+                                    <option selected disabled hidden>-- Pilih Kategori --</option>
                                     @foreach ($kategori_tokos as $kategori)
-                                        <option value="{{ $kategori->id }}"
-                                            {{ old('kategori_toko_id', session('toko_step1.kategori_toko_id')) == $kategori->id ? 'selected' : '' }}>
-                                            {{ $kategori->nama_kategori_toko }}
-                                        </option>
+                                    <option value="{{ $kategori->id }}"
+                                        {{ old('kategori_toko_id', session('toko_step1.kategori_toko_id')) == $kategori->id ? 'selected' : '' }}>
+                                        {{ $kategori->nama_kategori_toko }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
+
+                            <div class="mb-3" id="kategori_toko" hidden>
+                                <label class="form-label">Input Kategori Toko</label>
+                                <input type="text" name="kategori_toko" class="form-control"
+                                    value="{{ old('kategori_toko', session('toko_step1.kategori_toko')) }}" required>
+                            </div>
+
+                            <!-- JQUERY -->
+                            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+                            <!-- SCRIPT -->
+                            <script>
+                                $(document).ready(function () {
+                                    function toggleKategoriInput() {
+                                        const selectedValue = parseInt($('#kategori_toko_id').val());
+                                        if (selectedValue === 20) {
+                                            $('#kategori_toko').prop('hidden', false);
+                                        } else {
+                                            $('#kategori_toko').prop('hidden', true);
+                                        }
+                                    }
+
+                                    // Jalankan saat halaman dimuat (untuk restore dari session atau validasi)
+                                    toggleKategoriInput();
+
+                                    // Jalankan saat dropdown berubah
+                                    $('#kategori_toko_id').on('change', toggleKategoriInput);
+                                });
+                            </script>
+
+
                             <div class="mb-3">
                                 <label class="form-label">No. HP Toko</label>
-                                <input type="text" name="no_hp_toko" class="form-control" maxlength="20"
-                                    value="{{ old('no_hp_toko', session('toko_step1.no_hp_toko')) }}" required>
+                                <div class="input-group">
+                                    <span class="input-group-text">+62</span>
+                                    <input type="number" name="no_hp_toko" class="form-control" maxlength="15"
+                                        value="{{ old('no_hp_toko', session('toko_step1.no_hp_toko') ? ltrim(session('toko_step1.no_hp_toko'), '+62') : '') }}"
+                                        pattern="[0-9]{6,13}" title="Masukkan angka setelah +62 (6-13 digit)" required>
+                                </div>
                             </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Alamat</label>
                                 <textarea name="alamat_toko" class="form-control" rows="3" required>{{ old('alamat_toko', session('toko_step1.alamat_toko')) }}</textarea>

@@ -1,14 +1,15 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\DetailToko;
-use App\Models\IzinToko;
-use App\Models\kategori_toko;
-use App\Models\Toko;
 use Carbon\Carbon;
+use App\Models\Toko;
+use App\Models\IzinToko;
+use App\Models\DetailToko;
 use Illuminate\Http\Request;
+use App\Models\kategori_toko;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -348,7 +349,8 @@ public function verifikasi_toko_store(Request $request, $step)
         case 1:
             session()->forget(['toko_step1', 'toko_step2', 'toko_step3', 'toko_step4', 'toko_step5']);
 
-            $validated = $request->validate([
+
+             $validated = $request->validate([
                 'nama_toko'        => 'required|string|max:255',
                 'kategori_toko_id' => 'required|exists:kategori_tokos,id',
                 'no_hp_toko'       => 'required|string|max:20',
@@ -357,6 +359,21 @@ public function verifikasi_toko_store(Request $request, $step)
                 'logo_toko'        => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             ]);
 
+            // Validasi kategori_lain hanya jika kategori_toko_id == 20
+            if ((int) $request->kategori_toko_id === 20) {
+                $request->validate([
+                    'kategori_lain' => [
+                        'required',
+                        'string',
+                        'max:255',
+                        Rule::notIn(DB::table('kategori_tokos')->pluck('nama_kategori_toko')->toArray())
+                    ]
+                ]);
+
+                $validated['kategori_lain'] = $request->input('kategori_lain');
+            }
+
+            // Simpan file logo jika ada
             if ($request->hasFile('logo_toko')) {
                 $validated['logo_toko'] = $request->file('logo_toko')->store('logo_toko_tmp', 'public');
             }

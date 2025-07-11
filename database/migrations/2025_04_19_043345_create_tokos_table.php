@@ -23,6 +23,7 @@ return new class extends Migration
             $table->text('deskripsi_toko')->nullable();
             $table->enum('status_toko', ['izinkan', 'tidak_diizinkan', 'proses'])->default('proses');
             $table->boolean('status_aktif_toko')->default(true);
+            $table->string('kategori_lain')->nullable();
             $table->timestamps();
             $table->softDeletes();
 
