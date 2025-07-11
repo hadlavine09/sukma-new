@@ -363,187 +363,230 @@
                 <button class="checkout-btn mt-3">Pilih Pembayaran</button>
             </div>
         </div>
-    </div>
-<!-- Modal Pilih Alamat -->
-<!-- Modal Pilih Alamat -->
-<!-- Modal Pilih Alamat -->
-<!-- Modal Pilih Alamat -->
-<div class="modal fade" id="modalAlamat" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="modalAlamatLabel" aria-hidden="true">
+    </div><!-- Modal Alamat -->
+<!-- Modal Alamat -->
+<div class="modal fade" id="modalAlamat" tabindex="-1" aria-labelledby="modalAlamatLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-kecil">
     <div class="modal-content">
-
-      <!-- Header -->
       <div class="modal-header border-0">
-        <h5 class="modal-title fw-semibold" id="modalAlamatLabel">Pilih Alamat Pengiriman</h5>
+        <h5 class="modal-title" id="modalAlamatLabel">Pilih Alamat Pengiriman</h5>
       </div>
 
-      <!-- Body -->
       <div class="modal-body pt-0">
-
-        <!-- Tombol Tambah Alamat -->
-        <div class="mb-3">
-          <button id="btnShowTambahAlamat" class="btn btn-outline-success w-100">+ Tambah Alamat Baru</button>
-        </div>
-
-        <!-- Daftar Alamat -->
+        <!-- List Alamat -->
         <div id="alamatListSection">
           <form id="formAlamat">
-            <div class="form-check border p-3 rounded mb-3">
-              <input class="form-check-input alamat-radio" type="radio" name="alamat" id="alamat1" value="1" checked>
-              <label class="form-check-label w-100" for="alamat1">
-                <strong>Agung Wijaya</strong> | 085239935929<br>
-                Lemah Putro gang 3 RT02/RW02<br>
-                Sidoarjo, Kec. Sidoarjo, 61213
-              </label>
-            </div>
+            @php
+              $utama = $alamatList->where('is_utama', true)->first();
+              $lainnya = $alamatList->where('is_utama', false);
+            @endphp
 
-            <div class="form-check border p-3 rounded mb-3">
-              <input class="form-check-input alamat-radio" type="radio" name="alamat" id="alamat2" value="2">
-              <label class="form-check-label w-100" for="alamat2">
-                <strong>Budi Santoso</strong> | 081234567890<br>
-                Jl. Melati No. 10<br>
-                Surabaya, Kec. Tambaksari, 60133
-              </label>
-            </div>
+            @if ($utama)
+              <div class="form-check border p-3 rounded mb-3 bg-light position-relative">
+                <input class="form-check-input alamat-radio" type="radio" name="alamat" id="alamat{{ $utama->id }}" value="{{ $utama->id }}" checked>
+                <label class="form-check-label w-100" for="alamat{{ $utama->id }}">
+                  <strong>{{ $utama->nama_alamat }}</strong>
+                  <span class="badge bg-success ms-2">Utama</span><br>
+                  {{ $utama->nama_penerima }} | {{ $utama->no_hp }}<br>
+                  {{ $utama->alamat_lengkap }}
+                </label>
+                <div class="position-absolute top-0 end-0 mt-2 me-2">
+                  <button type="button" class="btn btn-sm btn-outline-secondary me-1 btn-edit-alamat" data-id="{{ $utama->id }}">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </div>
+              </div>
+            @endif
+
+            @foreach ($lainnya as $alamat)
+              <div class="form-check border p-3 rounded mb-3 position-relative">
+                <input class="form-check-input alamat-radio" type="radio" name="alamat" id="alamat{{ $alamat->id }}" value="{{ $alamat->id }}">
+                <label class="form-check-label w-100" for="alamat{{ $alamat->id }}">
+                  <strong>{{ $alamat->nama_alamat }}</strong><br>
+                  {{ $alamat->nama_penerima }} | {{ $alamat->no_hp }}<br>
+                  {{ $alamat->alamat_lengkap }}
+                </label>
+                <div class="position-absolute top-0 end-0 mt-2 me-2">
+                  <button type="button" class="btn btn-sm btn-outline-secondary me-1 btn-edit-alamat" data-id="{{ $alamat->id }}">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-delete-alamat" data-id="{{ $alamat->id }}">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+              </div>
+            @endforeach
           </form>
         </div>
 
-        <!-- Form Tambah Alamat -->
+        <!-- Form Tambah/Edit Alamat -->
         <div id="alamatFormSection" class="d-none">
+          <input type="hidden" id="alamatId">
           <div class="mb-3">
-            <label for="newNama" class="form-label">Nama Lengkap</label>
-            <input type="text" class="form-control" id="newNama" placeholder="Nama Lengkap">
+            <label for="newNama" class="form-label">Nama Penerima</label>
+            <input type="text" class="form-control" id="newNama">
           </div>
-
           <div class="mb-3">
-            <label for="newHp" class="form-label">Nomor Telepon</label>
-            <input type="text" class="form-control" id="newHp" placeholder="Nomor Telepon">
+            <label for="newHp" class="form-label">No HP</label>
+            <input type="text" class="form-control" id="newHp">
           </div>
-
+          <div class="mb-3">
+            <label for="newNamaAlamat" class="form-label">Nama Alamat</label>
+            <select class="form-select" id="newNamaAlamat">
+              <option selected disabled hidden>-- Pilih Nama Alamat --</option>
+              <option value="Rumah">Rumah</option>
+              <option value="Kantor">Kantor</option>
+              <option value="Apartemen">Apartemen</option>
+              <option value="Kos">Kos</option>
+              <option value="Gudang">Gudang</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
           <div class="mb-3">
             <label for="newAlamat" class="form-label">Alamat Lengkap</label>
-            <textarea class="form-control" id="newAlamat" rows="3" placeholder="Nama Jalan, RT/RW, Kecamatan, Kode Pos, Kota, Provinsi"></textarea>
+            <textarea class="form-control" id="newAlamat" rows="3"></textarea>
+          </div>
+          <div class="d-flex justify-content-between">
+            <button class="btn btn-light" data-bs-dismiss="modal" id="btnBatalTambah">Nanti Saja</button>
+            <button class="btn btn-danger" type="button" id="btnSimpanAlamat">Simpan Alamat</button>
           </div>
         </div>
-
       </div>
 
-      <!-- Footer -->
       <div class="modal-footer justify-content-between border-0">
-        <button class="btn btn-light" data-bs-dismiss="modal" id="btnNantiSaja">Nanti Saja</button>
-        <button class="btn btn-danger" id="btnSimpanAlamat">Simpan Alamat</button>
+        <button class="btn btn-light" data-bs-dismiss="modal" id="btnTutupModal">Nanti Saja</button>
+        <button id="btnShowTambahAlamat" class="btn btn-outline-success">+ Tambah Alamat Baru</button>
       </div>
-
     </div>
   </div>
 </div>
 
-<!-- Style Modal Responsive -->
-<style>
-  .modal-kecil {
-    max-width: 500px;
-    margin: auto;
-  }
-
-  @media (max-width: 576px) {
-    .modal-kecil {
-      max-width: 95% !important;
-    }
-
-    .modal-header {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-  }
-</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-  const btnShowTambahAlamat = document.getElementById('btnShowTambahAlamat');
-  const alamatListSection = document.getElementById('alamatListSection');
-  const alamatFormSection = document.getElementById('alamatFormSection');
-  const btnNantiSaja = document.getElementById('btnNantiSaja');
-  const btnSimpanAlamat = document.getElementById('btnSimpanAlamat');
-  const alamatUtama = document.getElementById('alamatUtama'); // Elemen di luar modal untuk menampilkan alamat terpilih
+  $('#modalAlamat').on('shown.bs.modal', function () {
+    $('#alamatId').val('');
+    $('#alamatFormSection').addClass('d-none');
+    $('#alamatListSection').removeClass('d-none');
+    $('#btnShowTambahAlamat').removeClass('d-none');
+    $('#btnTutupModal').removeClass('d-none');
+    $('#modalAlamatLabel').text('Pilih Alamat Pengiriman');
 
-  // Tampilkan form tambah alamat
-  btnShowTambahAlamat.addEventListener('click', () => {
-    alamatListSection.classList.add('d-none');
-    alamatFormSection.classList.remove('d-none');
+    $('#newNama').val('');
+    $('#newHp').val('');
+    $('#newNamaAlamat').val('');
+    $('#newAlamat').val('');
   });
 
-  // Tombol 'Nanti Saja'
-  btnNantiSaja.addEventListener('click', () => {
-    alamatFormSection.classList.add('d-none');
-    alamatListSection.classList.remove('d-none');
+  $('#btnShowTambahAlamat').on('click', () => {
+    $('#alamatId').val('');
+    $('#alamatFormSection').removeClass('d-none');
+    $('#alamatListSection').addClass('d-none');
+    $('#btnShowTambahAlamat').addClass('d-none');
+    $('#btnTutupModal').addClass('d-none');
+    $('#modalAlamatLabel').text('Tambah Alamat Baru');
   });
 
-  // Simpan alamat baru (simulasi)
-  btnSimpanAlamat.addEventListener('click', () => {
-    const nama = document.getElementById('newNama').value.trim();
-    const hp = document.getElementById('newHp').value.trim();
-    const alamatLengkap = document.getElementById('newAlamat').value.trim();
+  $('#btnBatalTambah').on('click', () => {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalAlamat'));
+    if (modal) modal.hide();
+    setTimeout(() => $('#modalAlamat').modal('show'), 300);
+  });
 
-    if (!nama || !hp || !alamatLengkap) {
+  $('#btnSimpanAlamat').on('click', function () {
+    const id = $('#alamatId').val();
+    const namaAlamat = $('#newNamaAlamat').val()?.trim();
+    const nama = $('#newNama').val()?.trim();
+    const hp = $('#newHp').val()?.trim();
+    const alamat = $('#newAlamat').val()?.trim();
+
+    if (!namaAlamat || !nama || !hp || !alamat) {
       alert('Mohon lengkapi semua field!');
       return;
     }
 
-    // Buat ID unik
-    const newId = `alamat${Date.now()}`;
+    const isEdit = !!id;
+    const url = isEdit ? '/alamat/' + id : '{{ route("alamat.store") }}';
+    const method = isEdit ? 'POST' : 'POST';
+    const data = {
+      nama_alamat: namaAlamat,
+      nama_penerima: nama,
+      no_hp: hp,
+      alamat_lengkap: alamat,
+      _token: '{{ csrf_token() }}'
+    };
+    if (isEdit) data._method = 'PUT';
 
-    // Tambahkan ke daftar alamat (simulasi)
-    const form = document.getElementById('formAlamat');
-    const newDiv = document.createElement('div');
-    newDiv.className = "form-check border p-3 rounded mb-3";
-    newDiv.innerHTML = `
-      <input class="form-check-input alamat-radio" type="radio" name="alamat" id="${newId}" value="${newId}">
-      <label class="form-check-label w-100" for="${newId}">
-        <strong>${nama}</strong> | ${hp}<br>
-        ${alamatLengkap.replace(/\n/g, "<br>")}
-      </label>
-    `;
-    form.appendChild(newDiv);
-
-    // Reset form
-    document.getElementById('newNama').value = '';
-    document.getElementById('newHp').value = '';
-    document.getElementById('newAlamat').value = '';
-
-    // Kembali ke tampilan list
-    alamatFormSection.classList.add('d-none');
-    alamatListSection.classList.remove('d-none');
-
-    // Set radio baru sebagai terpilih
-    form.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
-    newDiv.querySelector('input').checked = true;
-
-    // Update tampilan di luar modal
-    updateAlamatUtama();
-
-    // Tutup modal
-    const modalEl = document.getElementById('modalAlamat');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
+    $.ajax({ url, method, data,
+      success: res => res.success ? location.reload() : alert(res.message || 'Gagal menyimpan.'),
+      error: () => alert('Terjadi kesalahan saat menyimpan.')
+    });
   });
 
-  // Update tampilan alamat utama saat memilih radio
-  function updateAlamatUtama() {
-    const selectedRadio = document.querySelector('input[name="alamat"]:checked');
-    if (!selectedRadio) return;
+  $(document).on('change', '.alamat-radio', function () {
+    const id = $(this).val();
+    $.ajax({
+      url: '{{ route("alamat.updateutama", ":id") }}'.replace(':id', id),
+      method: 'POST',
+      data: { is_utama: true, _token: '{{ csrf_token() }}' },
+      success: res => res.success ? location.reload() : alert(res.message),
+      error: () => alert('Gagal menghubungi server.')
+    });
+  });
 
-    const label = selectedRadio.nextElementSibling;
-    if (label && alamatUtama) {
-      alamatUtama.innerHTML = label.innerHTML;
+  $(document).on('click', '.btn-delete-alamat', function () {
+    const id = $(this).data('id');
+    if (confirm('Yakin ingin menghapus alamat ini?')) {
+      $.ajax({
+        url: '{{ route("alamat.destroy", ":id") }}'.replace(':id', id),
+        method: 'POST',
+        data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+        success: res => res.success ? location.reload() : alert(res.message),
+        error: () => alert('Gagal menghapus alamat.')
+      });
     }
-  }
+  });
 
-  // Deteksi saat radio dipilih secara manual
-  document.addEventListener('change', function (e) {
-    if (e.target.classList.contains('alamat-radio')) {
-      updateAlamatUtama();
-    }
+  $(document).on('click', '.btn-edit-alamat', function () {
+    const id = $(this).data('id');
+    $.ajax({
+      url: '/alamat/' + id,
+      method: 'GET',
+      success: function (res) {
+        if (res.success && res.data) {
+          const data = res.data;
+          $('#alamatId').val(data.id);
+          $('#newNama').val(data.nama_penerima);
+          $('#newHp').val(data.no_hp);
+          $('#newNamaAlamat').val(data.nama_alamat);
+          $('#newAlamat').val(data.alamat_lengkap);
+
+          $('#alamatListSection').addClass('d-none');
+          $('#alamatFormSection').removeClass('d-none');
+          $('#btnShowTambahAlamat').addClass('d-none');
+          $('#btnTutupModal').addClass('d-none');
+          $('#modalAlamatLabel').text('Edit Alamat');
+        } else {
+          alert('Gagal memuat data alamat.');
+        }
+      },
+      error: function () {
+        
+        alert('Terjadi kesalahan saat mengambil data alamat.');
+      }
+    });
   });
 </script>
+
+<style>
+  .modal-kecil { max-width: 500px; margin: auto; }
+  @media (max-width: 576px) {
+    .modal-kecil { max-width: 95% !important; }
+    .modal-header { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+
 
 
 

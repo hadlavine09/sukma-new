@@ -6,6 +6,7 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\TokoController;
+use App\Http\Controllers\AlamatController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TransaksiMaterial;
@@ -95,6 +96,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/checkout/simpan-alamat', [CartController::class, 'simpanAlamat'])->name('checkout.simpanAlamat');
         Route::post('/checkout/pilih-alamat', [CartController::class, 'pilihAlamat'])->name('checkout.pilihAlamat');
         Route::post('/checkout/pilih-voucher', [CartController::class, 'pilihVoucher'])->name('checkout.pilihVoucher');
+        Route::prefix('Alamat')->group(function () {
+            Route::get('/', [AlamatController::class, 'index'])->name('alamat.index');
+            Route::post('store', [AlamatController::class, 'store'])->name('alamat.store');
+            Route::post('/updateUtama/{id}', [AlamatController::class, 'updateutama'])->name('alamat.updateutama');
+            Route::post('/destroy/{id}', [AlamatController::class, 'destroy'])->name('alamat.destroy');
+        });
 
         Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('frontend.checkoutstore');
         Route::post('cartupdate', [CartController::class, 'cartupdate'])->name('frontend.cartupdate');
