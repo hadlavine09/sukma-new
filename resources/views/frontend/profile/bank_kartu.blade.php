@@ -102,12 +102,152 @@
                     <div class="col-12 order-2 order-lg-1">
                         <div class="p-4 border rounded shadow-sm bg-white h-100">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="fw-bold mb-0">Bank</h5>
+                                <h5 class="fw-bold mb-0">Rekening Bank</h5>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#tambahBankModal">
+                                    + Tambah Bank
+                                </button>
                             </div>
 
+                            @if (empty($alamat_user))
+                                <div class="alert alert-info mb-0">Belum ada bank yang terdaftar untuk akun ini.</div>
+                            @else
+                                {{-- Daftar bank yang sudah tersimpan --}}
+                                <div class="list-group">
+                                    @foreach ($alamat_user as $bank)
+                                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ $bank->nama_bank }}</strong><br>
+                                                <small>{{ $bank->no_rekening }} - {{ $bank->nama_pemilik }}</small>
+                                            </div>
+                                            <span class="badge bg-success">Terverifikasi</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
+
+                <!-- Modal Tambah Bank -->
+                <div class="modal fade" id="tambahBankModal" tabindex="-1" aria-labelledby="tambahBankModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <form id="formTambahBank" method="POST" action="{{ route('profile.bank.tambah') }}">
+                            @csrf
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Tambah Rekening Bank</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Tutup"></button>
+                                </div>
+
+                                <div class="modal-body">
+
+                                    <!-- Dropdown Bank -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Pilih Bank</label>
+                                        <select class="form-select" name="nama_bank" id="nama_bank"
+                                            onchange="updateBankLogo()" required>
+                                            <option value="" selected disabled>-- Pilih Bank --</option>
+                                            <option value="BCA"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/BCA_logo.svg/512px-BCA_logo.svg.png">
+                                                BCA</option>
+                                            <option value="BNI"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/0/04/Logo_BNI.png/640px-Logo_BNI.png">
+                                                BNI</option>
+                                            <option value="BRI"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/c/cf/Bank_Rakyat_Indonesia.svg/512px-Bank_Rakyat_Indonesia.svg.png">
+                                                BRI</option>
+                                            <option value="Mandiri"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/4/4e/Bank_Mandiri_logo.svg/512px-Bank_Mandiri_logo.svg.png">
+                                                Mandiri</option>
+                                            <option value="BSI"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Logo_BSI_Bank_Syariah_Indonesia.svg/512px-Logo_BSI_Bank_Syariah_Indonesia.svg.png">
+                                                BSI</option>
+                                            <option value="CIMB Niaga"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/2/2e/CIMB_Niaga_logo.svg/512px-CIMB_Niaga_logo.svg.png">
+                                                CIMB Niaga</option>
+                                            <option value="Permata"
+                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/e/eb/Bank_Permata_logo.svg/512px-Bank_Permata_logo.svg.png">
+                                                Permata</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Logo Bank Preview -->
+                                    <div class="mb-3 text-center">
+                                        <img id="logo_bank_preview" src="" alt="Logo Bank"
+                                            style="max-height: 40px; display: none; border: 1px solid #ddd; padding: 6px; border-radius: 6px;">
+                                    </div>
+
+                                    <!-- Nomor Rekening -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Nomor Rekening</label>
+                                        <input type="text" class="form-control" name="no_rekening" id="no_rekening"
+                                            required>
+                                    </div>
+
+                                    <!-- Nama Pemilik -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Nama Pemilik (Otomatis)</label>
+                                        <input type="text" class="form-control" name="nama_pemilik" id="nama_pemilik"
+                                            readonly>
+                                    </div>
+
+                                    <!-- Tombol Verifikasi -->
+                                    <button type="button" class="btn btn-info btn-sm" onclick="verifikasiRekening()">
+                                        Verifikasi Rekening
+                                    </button>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Simpan</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <script>
+                    function updateBankLogo() {
+                        const select = document.getElementById('nama_bank');
+                        const selectedOption = select.options[select.selectedIndex];
+                        const logoUrl = selectedOption.getAttribute('data-logo');
+                        const logoPreview = document.getElementById('logo_bank_preview');
+
+                        if (logoUrl) {
+                            logoPreview.src = logoUrl;
+                            logoPreview.style.display = 'inline-block';
+                        } else {
+                            logoPreview.style.display = 'none';
+                        }
+                    }
+
+                    function verifikasiRekening() {
+                        const norek = document.getElementById('no_rekening').value;
+
+                        if (!norek) {
+                            alert('Masukkan nomor rekening terlebih dahulu.');
+                            return;
+                        }
+
+                        // Simulasi: Ganti dengan API asli jika tersedia
+                        fetch(`https://api.fakebank.id/cek-norek?norek=${norek}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    document.getElementById('nama_pemilik').value = data.nama;
+                                    alert('Rekening terverifikasi!');
+                                } else {
+                                    alert('Nomor rekening tidak valid.');
+                                }
+                            })
+                            .catch(() => alert('Gagal terhubung ke server.'));
+                    }
+                </script>
+
+
+
                 <!-- col-lg-9 -->
             </div> <!-- row -->
             <style>

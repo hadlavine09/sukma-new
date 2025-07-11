@@ -26,7 +26,7 @@
         /* border-radius: 1rem; */
     }
 
-    .left-side h1 {
+    .left-side h1 {sd
         font-size: 2.5rem;
         color: #1b4d3e;
         margin-bottom: 1rem;
@@ -63,7 +63,8 @@
 
     .carousel-item img {
         width: 100%;
-        max-width: 600px; /* ✅ tambahkan max-width */
+        max-width: 600px;
+        /* ✅ tambahkan max-width */
         height: 100%;
         object-fit: cover;
         display: block;
@@ -85,32 +86,25 @@
         <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
             <div class="carousel-inner">
                 <div class="carousel-item active">
-                    <img src="{{ asset('assets_frontend/images/hero-img-1.png') }}"
-                        alt="Eco Products 1">
+                    <img src="{{ asset('assets_frontend/images/hero-img-1.png') }}" alt="Eco Products 1">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar1.jpg') }}"
-                        alt="Eco Products 2">
+                    <img src="{{ asset('assets_frontend/images/gambar1.jpg') }}" alt="Eco Products 2">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar2.jpg') }}"
-                        alt="Eco Products 3">
+                    <img src="{{ asset('assets_frontend/images/gambar2.jpg') }}" alt="Eco Products 3">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar3.jpg') }}"
-                        alt="Eco Products 4">
+                    <img src="{{ asset('assets_frontend/images/gambar3.jpg') }}" alt="Eco Products 4">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/gambar4.jpg') }}"
-                        alt="Eco Products 4">
+                    <img src="{{ asset('assets_frontend/images/gambar4.jpg') }}" alt="Eco Products 4">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/banner-image-1.jpg') }}"
-                        alt="Eco Products 5">
+                    <img src="{{ asset('assets_frontend/images/banner-image-1.jpg') }}" alt="Eco Products 5">
                 </div>
                 <div class="carousel-item">
-                    <img src="{{ asset('assets_frontend/images/banner-image-2.jpg') }}"
-                        alt="Eco Products 6">
+                    <img src="{{ asset('assets_frontend/images/banner-image-2.jpg') }}" alt="Eco Products 6">
                 </div>
             </div>
         </div>

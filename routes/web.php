@@ -109,8 +109,12 @@ Route::middleware(['auth'])->group(function () {
 
             // Menu sidebar lainnya
             Route::get('/bank-kartu', [ProfileController::class, 'bankKartu'])->name('profile.bank-kartu');
+            Route::post('/bank/tambah', [ProfileController::class, 'tambahBank'])->name('profile.bank.tambah');
             Route::get('/alamat', [ProfileController::class, 'alamat'])->name('profile.alamat');
             Route::get('/ubah-password', [ProfileController::class, 'ubahPassword'])->name('profile.ubah-password');
+            Route::post('/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+            Route::post('/verifikasi-password', [ProfileController::class, 'verifikasiPassword'])->name('profile.verifikasi-password');
+            Route::delete('/delete-account', [ProfileController::class, 'deleteAccount'])->name('profile.delete-account');
             Route::get('/notifikasi-setting', [ProfileController::class, 'notifikasiSetting'])->name('profile.notifikasi-setting');
             Route::get('/privasi-setting', [ProfileController::class, 'privasiSetting'])->name('profile.privasi-setting');
 

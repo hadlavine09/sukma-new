@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 
 class ProfileController extends Controller
 {
@@ -25,6 +27,26 @@ class ProfileController extends Controller
     {
         return view('frontend.profile.bank_kartu');
     }
+    public function tambahBank(Request $request)
+    {
+        $request->validate([
+            'nama_bank' => 'required',
+            'no_rekening' => 'required',
+            'nama_pemilik' => 'required',
+        ]);
+
+        DB::table('bank_user')->insert([
+            'user_id' => Auth::id(),
+            'nama_bank' => $request->nama_bank,
+            'no_rekening' => $request->no_rekening,
+            'nama_pemilik' => $request->nama_pemilik,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Data bank berhasil ditambahkan.');
+    }
+
     public function alamat()
     {
         $userId = Auth::id();
@@ -134,7 +156,60 @@ class ProfileController extends Controller
 
     public function ubahPassword()
     {
-        return view('frontend.profile.ubah_password');
+        $user = Auth::user();
+        $passwordCache = Cache::get('user_password_' . $user->id);
+        $isVerified = Cache::has('user_password_' . $user->id);
+
+        return view('frontend.profile.ubah_password', compact('passwordCache', 'isVerified'));
+    }
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required'],
+            'new_password' => ['required', 'min:8', 'confirmed'],
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Password saat ini salah.']);
+        }
+
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        Cache::forget('user_password_' . $user->id); // bersihkan cache setelah ubah
+
+        return back()->with('success', 'Password berhasil diperbarui.');
+    }
+
+    public function verifikasiPassword(Request $request)
+    {
+        $request->validate([
+            'verifikasi_password' => ['required'],
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->verifikasi_password, $user->password)) {
+            return back()->withErrors(['verifikasi_password' => 'Password salah.']);
+        }
+
+        Cache::put('user_password_' . $user->id, $request->verifikasi_password, now()->addMinutes(5));
+
+        return back()->with('success', 'Password berhasil diverifikasi.');
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $user = Auth::user();
+
+        Auth::logout();
+        Cache::forget('user_password_' . $user->id);
+
+        $user->delete();
+
+        return redirect('/')->with('success', 'Akun berhasil dihapus.');
     }
     public function notifikasiSetting()
     {
