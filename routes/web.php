@@ -112,11 +112,14 @@ Route::middleware(['auth'])->group(function () {
                 return view('frontend.profile.profile');
             })->name('profile.index');
 
-            Route::get('/get-users', [ProfileController::class, 'getUsers'])->name('profile.getUsers');
+            Route::get('/get-users', [ProfileController::class, 'getUsers']);
 
             // Menu sidebar lainnya
             Route::get('/bank-kartu', [ProfileController::class, 'bankKartu'])->name('profile.bank-kartu');
             Route::post('/bank/tambah', [ProfileController::class, 'tambahBank'])->name('profile.bank.tambah');
+            // Route hapus bank dengan verifikasi password
+            Route::delete('/profile/bank/{id}', [ProfileController::class, 'hapusBank'])->name('profile.bank.delete');
+
             Route::get('/alamat', [ProfileController::class, 'alamat'])->name('profile.alamat');
             Route::get('/ubah-password', [ProfileController::class, 'ubahPassword'])->name('profile.ubah-password');
             Route::post('/update-password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');

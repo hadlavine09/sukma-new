@@ -1,5 +1,42 @@
 @extends('frontend.component.main')
 @section('contentfrontend')
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Bootstrap CSS dan JS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <style>
+        #verif_password {
+            padding-right: 2.75rem;
+            /* ruang untuk ikon */
+        }
+
+        .toggle-password-btn {
+            border: none;
+            background: transparent;
+            position: absolute;
+            top: 75%;
+            right: 0.75rem;
+            transform: translateY(-50%);
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .toggle-password-btn i {
+            color: #000;
+            transition: color 0.2s;
+            font-size: 1.1rem;
+        }
+
+        .toggle-password-btn:hover i {
+            color: #0d6efd;
+        }
+    </style>
+
+
+
     <section class="py-5" style="background-color: #f9f9f9;">
         <div class="container-fluid">
             <div class="row">
@@ -10,7 +47,7 @@
                             <img src="{{ asset('images/default-profile.png') }}" class="rounded-circle me-2 mb-2 mb-md-0"
                                 width="40" height="40" alt="Profile">
                             <div>
-                                <strong>{{ $user->username ?? 'Username' }}</strong><br>
+                                <strong>{{ $user->username }}</strong><br>
                                 <a href="#" class="text-primary text-decoration-none small">✎ Ubah Profil</a>
                             </div>
                         </div>
@@ -109,18 +146,29 @@
                                 </button>
                             </div>
 
-                            @if (empty($alamat_user))
+                            @if ($bank_users->isEmpty())
                                 <div class="alert alert-info mb-0">Belum ada bank yang terdaftar untuk akun ini.</div>
                             @else
                                 {{-- Daftar bank yang sudah tersimpan --}}
                                 <div class="list-group">
-                                    @foreach ($alamat_user as $bank)
+                                    @foreach ($bank_users as $bank_user)
                                         <div class="list-group-item d-flex justify-content-between align-items-center">
                                             <div>
-                                                <strong>{{ $bank->nama_bank }}</strong><br>
-                                                <small>{{ $bank->no_rekening }} - {{ $bank->nama_pemilik }}</small>
+                                                <strong>{{ $bank_user->nama_bank }}</strong><br>
+                                                <small>{{ $bank_user->no_rekening }} -
+                                                    {{ $bank_user->nama_pemilik }}</small>
                                             </div>
-                                            <span class="badge bg-success">Terverifikasi</span>
+                                            <div>
+                                                <form method="POST"
+                                                    action="{{ route('profile.bank.delete', $bank_user->id) }}"
+                                                    class="d-inline" onsubmit="return showPasswordConfirmModal(event)">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <input type="hidden" name="password" id="modal_password_input">
+                                                    <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger">Hapus</button>
+                                                </form>
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
@@ -150,27 +198,12 @@
                                         <select class="form-select" name="nama_bank" id="nama_bank"
                                             onchange="updateBankLogo()" required>
                                             <option value="" selected disabled>-- Pilih Bank --</option>
-                                            <option value="BCA"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/BCA_logo.svg/512px-BCA_logo.svg.png">
-                                                BCA</option>
-                                            <option value="BNI"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/0/04/Logo_BNI.png/640px-Logo_BNI.png">
-                                                BNI</option>
-                                            <option value="BRI"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/c/cf/Bank_Rakyat_Indonesia.svg/512px-Bank_Rakyat_Indonesia.svg.png">
-                                                BRI</option>
-                                            <option value="Mandiri"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/4/4e/Bank_Mandiri_logo.svg/512px-Bank_Mandiri_logo.svg.png">
-                                                Mandiri</option>
-                                            <option value="BSI"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Logo_BSI_Bank_Syariah_Indonesia.svg/512px-Logo_BSI_Bank_Syariah_Indonesia.svg.png">
-                                                BSI</option>
-                                            <option value="CIMB Niaga"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/2/2e/CIMB_Niaga_logo.svg/512px-CIMB_Niaga_logo.svg.png">
-                                                CIMB Niaga</option>
-                                            <option value="Permata"
-                                                data-logo="https://upload.wikimedia.org/wikipedia/id/thumb/e/eb/Bank_Permata_logo.svg/512px-Bank_Permata_logo.svg.png">
-                                                Permata</option>
+                                            @foreach ($banks as $data)
+                                                <option value="{{ $data->nama }}"
+                                                    data-logo="{{ asset('image/logobank/' . $data->logo_filename) }}">
+                                                    {{ $data->nama }}
+                                                </option>
+                                            @endforeach
                                         </select>
                                     </div>
 
@@ -189,15 +222,10 @@
 
                                     <!-- Nama Pemilik -->
                                     <div class="mb-3">
-                                        <label class="form-label">Nama Pemilik (Otomatis)</label>
+                                        <label class="form-label">Nama Pemilik</label>
                                         <input type="text" class="form-control" name="nama_pemilik" id="nama_pemilik"
-                                            readonly>
+                                            required>
                                     </div>
-
-                                    <!-- Tombol Verifikasi -->
-                                    <button type="button" class="btn btn-info btn-sm" onclick="verifikasiRekening()">
-                                        Verifikasi Rekening
-                                    </button>
                                 </div>
 
                                 <div class="modal-footer">
@@ -208,6 +236,42 @@
                     </div>
                 </div>
 
+                <!-- Modal Verifikasi Password -->
+                <div class="modal fade" id="passwordConfirmModal" tabindex="-1"
+                    aria-labelledby="passwordConfirmModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form id="passwordConfirmForm">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="passwordConfirmModalLabel">Verifikasi Password</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Tutup"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3 position-relative">
+                                        <label for="verif_password" class="form-label">Masukkan Password Anda</label>
+                                        <input type="password" class="form-control" id="verif_password" required>
+
+                                        <!-- Button Icon Eye -->
+                                        <button type="button" class="toggle-password-btn" onclick="togglePassword()"
+                                            aria-label="Toggle Password Visibility">
+                                            <i id="togglePasswordIcon" class="bi bi-eye-slash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary">Lanjutkan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+                <!-- Script Preview Logo -->
                 <script>
                     function updateBankLogo() {
                         const select = document.getElementById('nama_bank');
@@ -222,30 +286,80 @@
                             logoPreview.style.display = 'none';
                         }
                     }
-
-                    function verifikasiRekening() {
-                        const norek = document.getElementById('no_rekening').value;
-
-                        if (!norek) {
-                            alert('Masukkan nomor rekening terlebih dahulu.');
-                            return;
-                        }
-
-                        // Simulasi: Ganti dengan API asli jika tersedia
-                        fetch(`https://api.fakebank.id/cek-norek?norek=${norek}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.status === 'success') {
-                                    document.getElementById('nama_pemilik').value = data.nama;
-                                    alert('Rekening terverifikasi!');
-                                } else {
-                                    alert('Nomor rekening tidak valid.');
-                                }
-                            })
-                            .catch(() => alert('Gagal terhubung ke server.'));
-                    }
                 </script>
 
+                <!-- SweetAlert Success -->
+                @if (session('success'))
+                    <script>
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: '{{ session('success') }}',
+                            confirmButtonColor: '#3085d6',
+                            confirmButtonText: 'OK'
+                        });
+                    </script>
+                @endif
+
+                <!-- SweetAlert Error -->
+                @if (session('error'))
+                    <script>
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal',
+                            text: '{{ session('error') }}',
+                            confirmButtonColor: '#d33',
+                            confirmButtonText: 'OK'
+                        });
+                    </script>
+                @endif
+                <script>
+                    let currentForm = null;
+
+                    function showPasswordConfirmModal(event) {
+                        event.preventDefault();
+                        currentForm = event.target;
+                        const modal = new bootstrap.Modal(document.getElementById('passwordConfirmModal'));
+                        modal.show();
+                        return false;
+                    }
+
+                    document.getElementById('passwordConfirmForm').addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        const password = document.getElementById('verif_password').value;
+                        if (!password) return;
+
+                        if (currentForm.querySelector('#modal_password_input')) {
+                            currentForm.querySelector('#modal_password_input').value = password;
+                        }
+
+                        currentForm.submit();
+                    });
+
+                    function togglePassword() {
+                        const input = document.getElementById('verif_password');
+                        const icon = document.getElementById('togglePasswordIcon');
+
+                        if (input.type === "password") {
+                            input.type = "text";
+                            icon.classList.remove("bi-eye-slash");
+                            icon.classList.add("bi-eye");
+                        } else {
+                            input.type = "password";
+                            icon.classList.remove("bi-eye");
+                            icon.classList.add("bi-eye-slash");
+                        }
+                    }
+
+                    // SweetAlert Feedback
+                    @if (session('success'))
+                        Swal.fire('Berhasil', '{{ session('success') }}', 'success');
+                    @endif
+
+                    @if (session('error'))
+                        Swal.fire('Gagal', '{{ session('error') }}', 'error');
+                    @endif
+                </script>
 
 
                 <!-- col-lg-9 -->

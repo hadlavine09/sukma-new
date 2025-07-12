@@ -22,11 +22,31 @@ class ProfileController extends Controller
 
         return response()->json($users);
     }
+    private function ambilUsers()
+    {
+        $users = DB::table('users')->get(['id', 'name', 'email', 'username', 'no_hp', 'no_ktp', 'profile', 'email_verified_at', 'google_id', 'avatar', 'created_at', 'updated_at']);
+
+        $users->transform(function ($user) {
+            $user->foto_ktp = asset('assets_profile/images/dummy-ktp.jpg');
+            return $user;
+        });
+
+        return $users;
+    }
 
     public function bankKartu()
     {
-        return view('frontend.profile.bank_kartu');
+        $user_id = auth()->id();
+
+        // Ambil hanya user yang sedang login
+        $user = $this->ambilUsers()->firstWhere('id', $user_id);
+
+        $bank_users = DB::table('bank_user')->where('user_id', $user_id)->get();
+        $banks = DB::table('banks')->get();
+
+        return view('frontend.profile.bank_kartu', compact('bank_users', 'banks', 'user'));
     }
+
     public function tambahBank(Request $request)
     {
         $request->validate([
@@ -34,6 +54,12 @@ class ProfileController extends Controller
             'no_rekening' => 'required',
             'nama_pemilik' => 'required',
         ]);
+
+        $exists = DB::table('bank_user')->where('no_rekening', $request->no_rekening)->exists();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'Nomor rekening sudah terdaftar.');
+        }
 
         DB::table('bank_user')->insert([
             'user_id' => Auth::id(),
@@ -44,7 +70,29 @@ class ProfileController extends Controller
             'updated_at' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Data bank berhasil ditambahkan.');
+        return redirect()->back()->with('success', 'Rekening bank berhasil ditambahkan.');
+    }
+    public function hapusBank(Request $request, $id)
+    {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $user = Auth::user();
+
+        if (!Hash::check($request->password, $user->password)) {
+            return redirect()->back()->with('error', 'Password yang Anda masukkan salah.');
+        }
+
+        $bank = DB::table('bank_user')->where('id', $id)->where('user_id', $user->id)->first();
+
+        if (!$bank) {
+            return redirect()->back()->with('error', 'Rekening bank tidak ditemukan atau bukan milik Anda.');
+        }
+
+        DB::table('bank_user')->where('id', $id)->delete();
+
+        return redirect()->back()->with('success', 'Rekening bank berhasil dihapus.');
     }
 
     public function alamat()
