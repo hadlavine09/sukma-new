@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\DetailToko;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Toko extends Model
 {
@@ -15,5 +16,10 @@ class Toko extends Model
 
 
     protected $guarded = ['id'];
+    public function detailToko()
+{
+    return $this->hasOne(DetailToko::class, 'toko_id');
+}
+
 
 }

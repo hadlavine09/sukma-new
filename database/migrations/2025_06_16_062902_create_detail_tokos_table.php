@@ -19,11 +19,11 @@ return new class extends Migration
             $table->foreign('toko_id')->references('id')->on('tokos')->onDelete('cascade');
 
             // Dokumen kepemilikan
-            $table->string('nama_ktp');
-            $table->string('nomor_ktp');
-            $table->string('nomor_kk');
-            $table->string('foto_ktp'); // path gambar disimpan
-            $table->string('foto_kk');
+            $table->string('nama_ktp')->nullable();
+            $table->string('nomor_ktp')->nullable();
+            $table->string('nomor_kk')->nullable();
+            $table->string('foto_ktp')->nullable(); // path gambar disimpan
+            $table->string('foto_kk')->nullable();
 
             // Informasi rekening
             $table->string('nama_bank')->nullable();
