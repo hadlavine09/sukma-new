@@ -59,6 +59,97 @@ class CartController extends Controller
         return view('backend.manajementtransaksi.cart.create', compact('produks', 'users'));
     }
 
+public function prepareCheckoutSekarang(Request $request)
+{
+    $request->validate([
+        'kode_produk' => 'required|exists:produks,kode_produk',
+        'quantity' => 'required|integer|min:1',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        $produk = DB::table('produks')->where('kode_produk', $request->kode_produk)->first();
+
+        if (!$produk) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Produk tidak ditemukan.',
+            ], 404);
+        }
+
+        $userId = Auth::id();
+        $existing = DB::table('carts')
+            ->where('user_id', $userId)
+            ->where('kode_produk', $request->kode_produk)
+            ->whereNull('deleted_at')
+            ->first();
+
+        $totalQuantity = $request->quantity;
+        if ($existing) {
+            $totalQuantity += $existing->quantity;
+        }
+
+        if ($totalQuantity > $produk->stok_produk) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Jumlah melebihi stok produk. Stok tersedia: ' . $produk->stok_produk,
+            ], 422);
+        }
+
+        $cartId = null;
+
+        if ($existing) {
+            DB::table('carts')
+                ->where('id', $existing->id)
+                ->update([
+                    'quantity' => $totalQuantity,
+                    'updated_at' => now(),
+                ]);
+
+            $cartId = $existing->id;
+        } else {
+            $cartId = DB::table('carts')->insertGetId([
+                'user_id' => $userId,
+                'kode_produk' => $request->kode_produk,
+                'quantity' => $request->quantity,
+                'harga_produk' => $produk->harga_produk,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Validasi hasil
+        if (empty($cartId)) {
+            DB::rollBack();
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal menyimpan ke keranjang.',
+            ], 500);
+    }
+
+        // Buat kode acak 100 karakter
+        $kode = Str::random(70) . substr(md5(rand()), 0, 30);
+
+        // Simpan mapping ID cart ke session
+        session()->put('checkout_kode_' . $kode, [$cartId]);
+
+        DB::commit();
+
+        return response()->json([
+            'status' => 'success',
+            'redirect' => route('frontend.checkout', ['kode' => $kode])
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
 public function prepareCheckout(Request $request)
 {
     $ids = $request->input('ids'); // array id dari JS
@@ -75,7 +166,7 @@ public function prepareCheckout(Request $request)
 
     return response()->json(['status' => 'success', 'redirect' => route('frontend.checkout', ['kode' => $kode])]);
 }
- public function checkout($kode)
+public function checkout($kode)
 {
     $ids = session('checkout_kode_' . $kode);
 
@@ -89,112 +180,234 @@ public function prepareCheckout(Request $request)
     $alamatList = Alamat::where('user_id', $user->id)
         ->limit(5)
         ->orderByDesc('is_utama') // alamat utama dulu
-    ->latest()                // lalu berdasarkan terbaru
-    ->get();
-        // dd($alamatList);
-// Query tetap sama
-// Di Controller Laravel (misalnya CartController.php)
+        ->latest()                // lalu berdasarkan terbaru
+        ->get();
 
-$produkWithTagsRaw = DB::table('carts')
-    ->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')
-    ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
-    ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
-    ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
-    ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
-    ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
-    ->select(
-        'carts.id as cart_id',
-        'carts.quantity',
-        'carts.harga_produk as harga_di_cart',
-        'produks.kode_produk',
-        'produks.nama_produk',
-        'produks.deskripsi_produk',
-        'produks.stok_produk',
-        'produks.harga_produk',
-        'produks.gambar_produk',
-        'produks.status_produk',
-        'produks.status_draf_produk',
-        'produks.kategori_produk_id',
-        'produks.toko_id',
-        'tokos.nama_toko',
-        'tokos.deskripsi_toko',
-        'kategori_tokos.nama_kategori_toko',
-        'kategori_tokos.deskripsi_kategori_toko',
-        'kategori_produks.nama_kategori_produk',
-        'kategori_produks.deskripsi_kategori_produk',
-        'tags.id as tag_id',
-        'tags.nama_tag',
-        'tags.deskripsi_tag'
-    )
-    ->where('carts.user_id', $user->id)
-    ->get();
+    // Ambil data produk + tag dari cart
+    $produkWithTagsRaw = DB::table('carts')
+        ->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')
+        ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+        ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+        ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
+        ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+        ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+        ->select(
+            'carts.id as cart_id',
+            'carts.quantity',
+            'carts.harga_produk as harga_di_cart',
+            'produks.kode_produk',
+            'produks.nama_produk',
+            'produks.deskripsi_produk',
+            'produks.stok_produk',
+            'produks.harga_produk',
+            'produks.gambar_produk',
+            'produks.status_produk',
+            'produks.status_draf_produk',
+            'produks.kategori_produk_id',
+            'produks.toko_id',
+            'produks.biaya_admin_desa_persen',
+            'produks.biaya_pengiriman',
+            'produks.harga_total',
+            'tokos.nama_toko',
+            'tokos.deskripsi_toko',
+            'kategori_tokos.nama_kategori_toko',
+            'kategori_tokos.deskripsi_kategori_toko',
+            'kategori_produks.nama_kategori_produk',
+            'kategori_produks.deskripsi_kategori_produk',
+            'tags.id as tag_id',
+            'tags.nama_tag',
+            'tags.deskripsi_tag'
+        )
+        ->where('carts.user_id', $user->id)
+        ->get();
 
-// Grouping by toko
-$tokoGrouped = [];
-foreach ($produkWithTagsRaw as $item) {
-    $tokoId = $item->toko_id;
-    $cartId = $item->cart_id;
+    // Group by toko
+    $tokoGrouped = [];
+    foreach ($produkWithTagsRaw as $item) {
+        $tokoId = $item->toko_id;
+        $cartId = $item->cart_id;
 
-    if (!isset($tokoGrouped[$tokoId])) {
-        $tokoGrouped[$tokoId] = [
-            'toko' => [
-                'id' => $tokoId,
-                'nama_toko' => $item->nama_toko,
-                'deskripsi_toko' => $item->deskripsi_toko,
-                'kategori_toko' => [
-                    'nama_kategori_toko' => $item->nama_kategori_toko,
-                    'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
-                ],
-                'cart' => []
-            ]
-        ];
+        if (!isset($tokoGrouped[$tokoId])) {
+            $tokoGrouped[$tokoId] = [
+                'toko' => [
+                    'id' => $tokoId,
+                    'nama_toko' => $item->nama_toko,
+                    'deskripsi_toko' => $item->deskripsi_toko,
+                    'kategori_toko' => [
+                        'nama_kategori_toko' => $item->nama_kategori_toko,
+                        'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+                    ],
+                    'cart' => []
+                ]
+            ];
+        }
+
+        if (!isset($tokoGrouped[$tokoId]['toko']['cart'][$cartId])) {
+            $tokoGrouped[$tokoId]['toko']['cart'][$cartId] = [
+                'cart_id' => $cartId,
+                'quantity' => $item->quantity,
+                'harga_di_cart' => $item->harga_di_cart,
+                'produk' => [
+                    'kode_produk' => $item->kode_produk,
+                    'nama_produk' => $item->nama_produk,
+                    'deskripsi_produk' => $item->deskripsi_produk,
+                    'stok_produk' => $item->stok_produk,
+                    'harga_produk' => $item->harga_produk,
+                    'biaya_admin_desa_persen' => $item->biaya_admin_desa_persen,
+                    'biaya_pengiriman' => $item->biaya_pengiriman,
+                    'harga_total' => $item->harga_total,
+                    'gambar_produk' => $item->gambar_produk,
+                    'status_produk' => $item->status_produk,
+                    'status_draf_produk' => $item->status_draf_produk,
+                    'kategori_produk_id' => $item->kategori_produk_id,
+                    'kategori_produk' => [
+                        'nama_kategori_produk' => $item->nama_kategori_produk,
+                        'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+                    ],
+                    'tags' => []
+                ]
+            ];
+        }
+
+        if (!is_null($item->tag_id)) {
+            $tokoGrouped[$tokoId]['toko']['cart'][$cartId]['produk']['tags'][] = [
+                'id' => $item->tag_id,
+                'nama_tag' => $item->nama_tag,
+                'deskripsi_tag' => $item->deskripsi_tag
+            ];
+        }
     }
 
-    if (!isset($tokoGrouped[$tokoId]['toko']['cart'][$cartId])) {
-        $tokoGrouped[$tokoId]['toko']['cart'][$cartId] = [
-            'cart_id' => $cartId,
-            'quantity' => $item->quantity,
-            'harga_di_cart' => $item->harga_di_cart,
-            'produk' => [
-                'kode_produk' => $item->kode_produk,
-                'nama_produk' => $item->nama_produk,
-                'deskripsi_produk' => $item->deskripsi_produk,
-                'stok_produk' => $item->stok_produk,
-                'harga_produk' => $item->harga_produk,
-                'gambar_produk' => $item->gambar_produk,
-                'status_produk' => $item->status_produk,
-                'status_draf_produk' => $item->status_draf_produk,
-                'kategori_produk_id' => $item->kategori_produk_id,
-                'kategori_produk' => [
-                    'nama_kategori_produk' => $item->nama_kategori_produk,
-                    'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
-                ],
-                'tags' => []
-            ]
-        ];
-    }
-
-    if (!is_null($item->tag_id)) {
-        $tokoGrouped[$tokoId]['toko']['cart'][$cartId]['produk']['tags'][] = [
-            'id' => $item->tag_id,
-            'nama_tag' => $item->nama_tag,
-            'deskripsi_tag' => $item->deskripsi_tag
-        ];
-    }
+    // Ubah ke array numerik agar bisa di-loop di Blade
+    $getprodukGrouped = array_values(array_map(function ($item) {
+        $item['toko']['cart'] = array_values($item['toko']['cart']);
+        return $item;
+    }, $tokoGrouped));
+    // dd($alamatList);
+    // Return ke view checkout
+    return view('frontend.checkout', compact('getprodukGrouped', 'alamatList'));
 }
 
-// Ubah menjadi array numerik
-$getprodukGrouped = array_values(array_map(function ($item) {
-    $item['toko']['cart'] = array_values($item['toko']['cart']);
-    return $item;
-}, $tokoGrouped));
+//  public function checkout($kode)
+// {
+//     $ids = session('checkout_kode_' . $kode);
 
-// Output untuk debug
-// dd($getprodukGrouped);
+//     if (!$ids) {
+//         abort(404, 'Kode checkout tidak ditemukan atau sudah kadaluarsa.');
+//     }
 
-// dd($getprodukGrouped);
-return view('frontend.checkout', compact('getprodukGrouped','alamatList'));
-}
+//     $user = auth()->user();
+
+//     // Ambil alamat list dari tabel 'alamats' berdasarkan user_id
+//     $alamatList = Alamat::where('user_id', $user->id)
+//         ->limit(5)
+//         ->orderByDesc('is_utama') // alamat utama dulu
+//     ->latest()                // lalu berdasarkan terbaru
+//     ->get();
+//         // dd($alamatList);
+// // Query tetap sama
+// // Di Controller Laravel (misalnya CartController.php)
+
+// $produkWithTagsRaw = DB::table('carts')
+//     ->join('produks', 'carts.kode_produk', '=', 'produks.kode_produk')
+//     ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+//     ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+//     ->leftJoin('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
+//     ->leftJoin('tag_produks', 'produks.id', '=', 'tag_produks.produk_id')
+//     ->leftJoin('tags', 'tag_produks.tag_id', '=', 'tags.id')
+//     ->select(
+//         'carts.id as cart_id',
+//         'carts.quantity',
+//         'carts.harga_produk as harga_di_cart',
+//         'produks.kode_produk',
+//         'produks.nama_produk',
+//         'produks.deskripsi_produk',
+//         'produks.stok_produk',
+//         'produks.harga_produk',
+//         'produks.gambar_produk',
+//         'produks.status_produk',
+//         'produks.status_draf_produk',
+//         'produks.kategori_produk_id',
+//         'produks.toko_id',
+//         'tokos.nama_toko',
+//         'tokos.deskripsi_toko',
+//         'kategori_tokos.nama_kategori_toko',
+//         'kategori_tokos.deskripsi_kategori_toko',
+//         'kategori_produks.nama_kategori_produk',
+//         'kategori_produks.deskripsi_kategori_produk',
+//         'tags.id as tag_id',
+//         'tags.nama_tag',
+//         'tags.deskripsi_tag'
+//     )
+//     ->where('carts.user_id', $user->id)
+//     ->get();
+
+// // Grouping by toko
+// $tokoGrouped = [];
+// foreach ($produkWithTagsRaw as $item) {
+//     $tokoId = $item->toko_id;
+//     $cartId = $item->cart_id;
+
+//     if (!isset($tokoGrouped[$tokoId])) {
+//         $tokoGrouped[$tokoId] = [
+//             'toko' => [
+//                 'id' => $tokoId,
+//                 'nama_toko' => $item->nama_toko,
+//                 'deskripsi_toko' => $item->deskripsi_toko,
+//                 'kategori_toko' => [
+//                     'nama_kategori_toko' => $item->nama_kategori_toko,
+//                     'deskripsi_kategori_toko' => $item->deskripsi_kategori_toko,
+//                 ],
+//                 'cart' => []
+//             ]
+//         ];
+//     }
+
+//     if (!isset($tokoGrouped[$tokoId]['toko']['cart'][$cartId])) {
+//         $tokoGrouped[$tokoId]['toko']['cart'][$cartId] = [
+//             'cart_id' => $cartId,
+//             'quantity' => $item->quantity,
+//             'harga_di_cart' => $item->harga_di_cart,
+//             'produk' => [
+//                 'kode_produk' => $item->kode_produk,
+//                 'nama_produk' => $item->nama_produk,
+//                 'deskripsi_produk' => $item->deskripsi_produk,
+//                 'stok_produk' => $item->stok_produk,
+//                 'harga_produk' => $item->harga_produk,
+//                 'gambar_produk' => $item->gambar_produk,
+//                 'status_produk' => $item->status_produk,
+//                 'status_draf_produk' => $item->status_draf_produk,
+//                 'kategori_produk_id' => $item->kategori_produk_id,
+//                 'kategori_produk' => [
+//                     'nama_kategori_produk' => $item->nama_kategori_produk,
+//                     'deskripsi_kategori_produk' => $item->deskripsi_kategori_produk,
+//                 ],
+//                 'tags' => []
+//             ]
+//         ];
+//     }
+
+//     if (!is_null($item->tag_id)) {
+//         $tokoGrouped[$tokoId]['toko']['cart'][$cartId]['produk']['tags'][] = [
+//             'id' => $item->tag_id,
+//             'nama_tag' => $item->nama_tag,
+//             'deskripsi_tag' => $item->deskripsi_tag
+//         ];
+//     }
+// }
+
+// // Ubah menjadi array numerik
+// $getprodukGrouped = array_values(array_map(function ($item) {
+//     $item['toko']['cart'] = array_values($item['toko']['cart']);
+//     return $item;
+// }, $tokoGrouped));
+
+// // Output untuk debug
+// // dd($getprodukGrouped);
+
+// // dd($getprodukGrouped);
+// return view('frontend.checkout', compact('getprodukGrouped','alamatList'));
+// }
 
 
     // Fungsi untuk menyimpan alamat yang dipilih

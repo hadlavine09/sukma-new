@@ -55,7 +55,7 @@
                                 <label>Gambar Produk</label>
                                 <input type="file" name="gambar_produk" class="form-control" accept="image/*">
                                 @if ($produk->gambar_produk)
-                                    <img src="{{ asset('storage/' . $produk->gambar_produk) }}" class="mt-2" height="100">
+                                    <img src="{{ asset('storage/' . $produk->gambar_produk) }}" class="mt-2 rounded" height="100">
                                 @endif
                             </div>
                         </div>
@@ -75,7 +75,7 @@
                             <div class="col-md-6">
                                 <label>Tag Produk</label>
                                 <select name="kode_tag[]" id="kode_tag" class="form-select" multiple required>
-                                    {{-- Tag akan dimuat lewat JavaScript --}}
+                                    {{-- Akan dimuat via JS --}}
                                 </select>
                             </div>
                         </div>
@@ -83,7 +83,17 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label>Harga Produk</label>
-                                <input type="number" name="harga_produk" class="form-control" value="{{ $produk->harga_produk }}" min="1" required>
+                                <input type="text" class="form-control" id="harga_produk_view" value="{{ number_format($produk->harga_produk, 0, '', '.') }}" required>
+
+                                <input type="hidden" name="harga_produk" id="harga_produk">
+
+                                <small class="form-text text-muted mt-1">Biaya Admin (10%): <span id="biaya_admin">Rp 0</span></small>
+                                <small class="form-text text-muted">Biaya Pengiriman (2%): <span id="biaya_pengiriman">Rp 0</span></small>
+                                <small class="form-text text-muted">Harga Total: <span id="harga_total">Rp 0</span></small>
+
+                                <input type="hidden" name="biaya_admin_desa_persen" value="10">
+                                <input type="hidden" name="biaya_pengiriman" id="biaya_pengiriman_val">
+                                <input type="hidden" name="harga_total" id="harga_total_val">
                             </div>
                             <div class="col-md-6">
                                 <label>Stok Produk</label>
@@ -107,9 +117,10 @@
     </div>
 </main>
 @endsection
+
 @section('js_content')
 <script>
-    const selectedTags = @json($tags); // Tag yang sudah dimiliki produk
+    const selectedTags = @json($tags); // array id tag produk
 
     function loadTags(kategoriId) {
         if (!kategoriId) {
@@ -142,22 +153,66 @@
         });
     }
 
+    function formatRupiah(angka) {
+        return angka.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+    function cleanNumber(val) {
+        return val.replace(/[^\d]/g, '');
+    }
+
     $(document).ready(function () {
-        // Auto-fade alerts
+        // Auto-hide alert
         setTimeout(() => {
             $('#success-alert').fadeOut('slow');
             $('#error-alert').fadeOut('slow');
         }, 3000);
 
-        // Load tag saat kategori diubah
+        // Load tag pertama kali
+        const initialKategori = $('#kategori_id').val();
+        loadTags(initialKategori);
+
+        // On kategori change
         $('#kategori_id').on('change', function () {
             const kategoriId = $(this).val();
             loadTags(kategoriId);
         });
 
-        // Load tag saat pertama kali halaman dibuka
-        const initialKategori = $('#kategori_id').val();
-        loadTags(initialKategori);
+        // Harga format & kalkulasi
+        $('#harga_produk_view').on('input', function () {
+            let raw = cleanNumber($(this).val());
+            $(this).val(formatRupiah(raw));
+            $('#harga_produk').val(raw);
+
+            if (raw) {
+                const harga = parseInt(raw);
+                const biayaAdmin = Math.round(harga * 0.10);
+                const biayaPengiriman = Math.round(harga * 0.02);
+                const hargaTotal = harga + biayaAdmin + biayaPengiriman;
+
+                $('#biaya_admin').text('Rp ' + formatRupiah(biayaAdmin));
+                $('#biaya_pengiriman').text('Rp ' + formatRupiah(biayaPengiriman));
+                $('#harga_total').text('Rp ' + formatRupiah(hargaTotal));
+
+                $('#biaya_pengiriman_val').val(biayaPengiriman);
+                $('#harga_total_val').val(hargaTotal);
+            } else {
+                $('#biaya_admin, #biaya_pengiriman, #harga_total').text('Rp 0');
+                $('#harga_produk').val('');
+                $('#biaya_pengiriman_val').val('');
+                $('#harga_total_val').val('');
+            }
+        });
+
+        $('#harga_produk_view').trigger('input'); // Trigger perhitungan saat load
+
+        // Blok input huruf & simbol aneh
+        $('#harga_produk_view').on('keydown', function (e) {
+            const key = e.key;
+            if (['e', 'E', '+', '-', ','].includes(key) || ((e.ctrlKey || e.metaKey) && key === 'v')) {
+                e.preventDefault();
+            }
+        });
     });
 </script>
 @endsection

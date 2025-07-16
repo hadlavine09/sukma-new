@@ -23,6 +23,9 @@ return new class extends Migration
             $table->unsignedBigInteger('toko_id');
             $table->enum('status_produk', ['publik', 'private'])->default('private');
             $table->enum('status_draf_produk', ['Aktif', 'Tidak Aktif'])->default('Aktif');
+            $table->unsignedTinyInteger('biaya_admin_desa_persen')->default(0); // contoh: 10%
+            $table->unsignedInteger('biaya_pengiriman')->default(0);
+            $table->string('harga_total'); // harga setelah admin dan pengiriman
             $table->timestamps();
             $table->softDeletes();
             $table->foreign('kategori_produk_id')->references('id')->on('kategori_produks')->onUpdate('cascade')->onDelete('cascade');

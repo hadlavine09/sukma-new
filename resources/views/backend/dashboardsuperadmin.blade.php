@@ -4,77 +4,59 @@
 <main class="app-content">
   <div class="app-title">
     <div>
-      <h1><i class="bi bi-shop"></i> Dashboard Toko</h1>
-      <p>Statistik Toko: {{ $tokoData['nama_toko'] }}</p>
+      <h1><i class="bi bi-bar-chart-line-fill"></i> Dashboard Superadmin</h1>
+      <p>Statistik keseluruhan sistem marketplace</p>
     </div>
   </div>
-<div class="row">
+
+  {{-- Widget Statistik --}}
+  <div class="row">
     <div class="col-md-6 col-lg-3">
-        <div class="widget-small coloured-icon shadow-sm" style="background-color: #28a745; color: white;">
-            <i class="icon bi bi-cash-coin fs-1 text-white"></i>
-            <div class="info">
-                <h4>Penghasilan</h4>
-                <p><b>Rp{{ number_format($tokoData['penghasilan_bulan_ini'], 0, ',', '.') }}</b></p>
-            </div>
+      <div class="widget-small coloured-icon shadow-sm" style="background-color: #007bff; color: white;">
+        <i class="icon bi bi-shop-window fs-1 text-white"></i>
+        <div class="info">
+          <h4>Total Toko</h4>
+          <p><b>{{ $tokoData['total_toko'] }}</b></p>
         </div>
+      </div>
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="widget-small coloured-icon shadow-sm" style="background-color: #17a2b8; color: white;">
-            <i class="icon bi bi-person-heart fs-1 text-white"></i>
-            <div class="info">
-                <h4>Follower</h4>
-                <p><b>{{ $tokoData['total_follower'] }}</b></p>
-            </div>
+      <div class="widget-small coloured-icon shadow-sm" style="background-color: #17a2b8; color: white;">
+        <i class="icon bi bi-people-fill fs-1 text-white"></i>
+        <div class="info">
+          <h4>Total Pengguna</h4>
+          <p><b>{{ $tokoData['total_pengguna'] }}</b></p>
         </div>
+      </div>
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="widget-small coloured-icon shadow-sm" style="background-color: #ffc107; color: black;">
-            <i class="icon bi bi-hand-thumbs-up fs-1 text-white"></i>
-            <div class="info">
-                <h4>Disukai Produk</h4>
-                <p><b>{{ $tokoData['produk_disukai'] }}</b></p>
-            </div>
+      <div class="widget-small coloured-icon shadow-sm" style="background-color: #28a745; color: white;">
+        <i class="icon bi bi-cash-stack fs-1 text-white"></i>
+        <div class="info">
+          <h4>Penghasilan Bulan Ini</h4>
+          <p><b>Rp{{ number_format($tokoData['penghasilan_bulan_ini'], 0, ',', '.') }}</b></p>
         </div>
+      </div>
     </div>
 
     <div class="col-md-6 col-lg-3">
-        <div class="widget-small coloured-icon shadow-sm" style="background-color: #007bff; color: white;">
-            <i class="icon bi bi-box-seam fs-1 text-white"></i>
-            <div class="info">
-                <h4>Jumlah Produk</h4>
-                <p><b>{{ $tokoData['jumlah_produk'] }}</b></p>
-            </div>
+      <div class="widget-small coloured-icon shadow-sm" style="background-color: #dc3545; color: white;">
+        <i class="icon bi bi-cart-check-fill fs-1 text-white"></i>
+        <div class="info">
+          <h4>Total Transaksi</h4>
+          <p><b>{{ $tokoData['total_transaksi_semua_toko'] }}</b></p>
         </div>
+      </div>
     </div>
+  </div>
 
-    <div class="col-md-6 col-lg-3">
-        <div class="widget-small coloured-icon shadow-sm" style="background-color: #6c757d; color: white;">
-            <i class="icon bi bi-star-fill fs-1 text-white"></i>
-            <div class="info">
-                <h4>Rating Toko</h4>
-                <p><b>{{ $tokoData['rating_toko'] }}/5</b></p>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-6 col-lg-3">
-        <div class="widget-small coloured-icon shadow-sm" style="background-color: #dc3545; color: white;">
-            <i class="icon bi bi-cart-check fs-1 text-white"></i>
-            <div class="info">
-                <h4>Total Transaksi</h4>
-                <p><b>{{ $tokoData['total_transaksi'] }}</b></p>
-            </div>
-        </div>
-    </div>
-</div>
-
-
+  {{-- Grafik --}}
   <div class="row mt-4">
     <div class="col-md-6">
       <div class="tile">
-        <h3 class="tile-title">Penghasilan 7 Hari Terakhir</h3>
+        <h3 class="tile-title">Penghasilan 7 Hari Semua Toko</h3>
         <div class="ratio ratio-16x9">
           <div id="chartPenghasilan"></div>
         </div>
@@ -120,7 +102,7 @@
     yAxis: { type: 'value', axisLabel: { formatter: 'Rp{value}' } },
     tooltip: { trigger: 'axis' },
     series: [{
-      data: @json($tokoData['penghasilan_7_hari']),
+      data: @json($tokoData['penghasilan_7_hari_toko']),
       type: 'line',
       smooth: true,
       itemStyle: { color: '#28a745' }

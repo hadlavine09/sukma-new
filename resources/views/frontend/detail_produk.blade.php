@@ -89,7 +89,7 @@
                 <button id="addToCart" type="button" class="btn w-100" style="color: #2d5727; border: 1px solid #2d5727; background-color: #f0f5f1;">
                     <i class="bi bi-cart-plus me-1"></i> Masukkan Keranjang
                 </button>
-                <button class="btn btn-custom-success no-hover w-100" type="submit" style="color: #fff">
+                <button id="addToCheckout" class="btn btn-custom-success no-hover w-100" type="submit" style="color: #fff">
                     <i class="bi bi-lightning-fill me-1"></i> Beli Sekarang
                 </button>
             </div>
@@ -505,6 +505,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const btnPlus = document.getElementById('btnPlus');
     const btnMinus = document.getElementById('btnMinus');
     const addToCartBtn = document.getElementById('addToCart');
+    const addToCheckoutBtn = document.getElementById('addToCheckout');
     const maxStok = parseInt(quantityInput.max);
 
     btnPlus.addEventListener('click', () => {
@@ -538,6 +539,42 @@ document.addEventListener('DOMContentLoaded', function () {
             success: function(response) {
                 if (response.status === 'success') {
                     window.location.href = "{{ route('frontend.keranjang') }}";
+                } else {
+                    alert(response.message || 'Gagal menambahkan produk ke keranjang.');
+                }
+            },
+            error: function(xhr) {
+                if (xhr.status === 422) {
+                    alert(xhr.responseJSON.message); // validasi quantity/stok
+                } else {
+                    alert('Terjadi kesalahan. Silakan coba lagi.');
+                }
+                // console.error(xhr.responseJSON || xhr.responseText);
+            }
+        });
+
+    });
+    addToCheckout.addEventListener('click', function () {
+        const quantity = parseInt(quantityInput.value);
+        const productCode = "{{ $produk->kode_produk }}";
+
+        if (quantity < 1) {
+            alert("Jumlah produk harus lebih dari 0.");
+            return;
+        }
+        $.ajax({
+            url: "{{ route('frontend.prepareCheckoutSekarang') }}",
+            type: "POST",
+            data: {
+                kode_produk: productCode,
+                quantity: quantity
+            },
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.status === 'success') {
+                    window.location.href = response.redirect;
                 } else {
                     alert(response.message || 'Gagal menambahkan produk ke keranjang.');
                 }

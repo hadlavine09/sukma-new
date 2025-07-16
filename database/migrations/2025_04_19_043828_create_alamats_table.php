@@ -20,7 +20,7 @@ return new class extends Migration
             $table->text('alamat_lengkap');
             $table->boolean('is_utama')->default(false); // Untuk alamat default
             $table->timestamps();
-                        $table->softDeletes();
+            $table->softDeletes();
 
 });
 

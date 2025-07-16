@@ -21,11 +21,12 @@ return new class extends Migration
             $table->string('no_hp_toko');
             $table->string('alamat_toko');
             $table->text('deskripsi_toko')->nullable();
-            $table->enum('status_toko', ['izinkan', 'tidak_diizinkan', 'proses'])->default('proses');
+            $table->enum('status_toko', ['izinkan', 'tidak_diizinkan', 'proses','belum_beres'])->default('belum_beres');
             $table->boolean('status_aktif_toko')->default(true);
             $table->string('kategori_lain')->nullable();
             $table->timestamps();
             $table->softDeletes();
+            $table->text('catatan_penolakan')->nullable();
 
             $table->foreign('pemilik_toko_id')->references('id')->on('users')->onUpdate('cascade')->onDelete('cascade');
             $table->foreign('kategori_toko_id')->references('id')->on('kategori_tokos')->onUpdate('cascade')->onDelete('cascade');

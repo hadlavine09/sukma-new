@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\User;
 use App\Models\DetailToko;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,9 +17,15 @@ class Toko extends Model
 
 
     protected $guarded = ['id'];
-    public function detailToko()
+
+public function detailToko()
 {
     return $this->hasOne(DetailToko::class, 'toko_id');
+}
+// App\Models\Toko.php
+public function pemilikToko()
+{
+    return $this->belongsTo(User::class, 'pemilik_toko_id');
 }
 
 

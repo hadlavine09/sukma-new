@@ -10,57 +10,65 @@ use Illuminate\Support\Facades\Validator;
 
 class LoginController extends Controller
 {
+protected function redirectTo()
+{
+    $user = Auth::user();
 
-    protected function redirectTo()
-    {
-        $user = Auth::user();
+    if (! $user) {
+        return '/';
+    }
 
-        // Cegah error jika user tidak ditemukan
-        if (! $user) {
-            return '/';
-        }
+    // Ambil role user dari relasi role_user
+    $role = DB::table('role_user')
+        ->where('user_id', $user->id)
+        ->join('roles', 'role_user.role_id', '=', 'roles.id')
+        ->select('roles.name')
+        ->first();
 
-        // Ambil role user dari relasi role_user
-        $role = DB::table('role_user')
-            ->where('user_id', $user->id)
-            ->join('roles', 'role_user.role_id', '=', 'roles.id')
-            ->select('roles.name')
+    if (! $role) {
+        return '/';
+    }
+
+    $roleName = $role->name;
+
+    // Default redirect
+    $redirect = '/';
+
+    if ($roleName === 'toko') {
+        $toko = DB::table('tokos')
+            ->where('pemilik_toko_id', $user->id)
+            ->whereNull('deleted_at')
+            ->orderByDesc('id')
             ->first();
 
-        // Cegah error jika role tidak ditemukan
-        if (! $role) {
-            return '/';
-        }
-
-        $roleName = $role->name;
-
-        // Jika role adalah 'toko', cek status toko
-        if ($roleName === 'toko') {
-            $toko = DB::table('tokos')
-                ->where('pemilik_toko_id', $user->id)
-                ->whereNull('deleted_at')
-                ->orderByDesc('id')
-                ->first();
-
-            if ($toko) {
-                return match ($toko->status_toko) {
-                    'proses', 'tidak_diizinkan' => route('verifikasi_toko.wait'),
-                    'izinkan'                   => route('dashboard'),
-                    default                     => route('verifikasi_toko.wait'),
-                };
+        if ($toko) {
+            switch ($toko->status_toko) {
+                case 'belum_beres':
+                    $redirect = route('verifikasitoko');
+                    break;
+                case 'proses':
+                case 'tidak_diizinkan':
+                    $redirect = route('verifikasi_toko.wait');
+                    break;
+                case 'izinkan':
+                    $redirect = route('dashboard');
+                    break;
+                default:
+                    $redirect = '/';
             }
-
-            // Jika belum pernah mengajukan toko
-            return route('verifikasi_toko.wait');
+        } else {
+            // Jika belum ada toko sama sekali, arahkan ke awal verifikasi
+            $redirect = route('verifikasitoko');
         }
-
-        // Redirect default berdasarkan role lainnya
-        return match ($roleName) {
-            'superadmin', 'admin' => route('dashboard'),
-            'user'                      => '/',
-            default                     => '/',
-        };
+    } elseif (in_array($roleName, ['admin', 'superadmin'])) {
+        $redirect = route('dashboard');
+    } elseif ($roleName === 'user') {
+        $redirect = '/';
     }
+
+    return $redirect;
+}
+
 
     public function showLoginForm()
     {

@@ -9,29 +9,30 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
- public function up(): void
-{
-    Schema::create('transaksis', function (Blueprint $table) {
+    public function up(): void
+    {
+        Schema::create('transaksi_produks', function (Blueprint $table) {
         $table->id();
-        $table->foreignId('user_id')->constrained()->onDelete('cascade');
-        $table->foreignId('alamat_id')->constrained('alamats')->onDelete('cascade');
-        $table->string('kode_transaksi')->unique();
-        $table->enum('metode_pembayaran', ['cod', 'transfer']);
-        $table->integer('subtotal');
+        $table->foreignId('transaksi_toko_id')->constrained('transaksi_tokos')->onDelete('cascade');
+        $table->string('nama_produk');
+        $table->integer('qty');
+        $table->integer('harga_satuan');
+        $table->integer('subtotal_produk');
         $table->integer('biaya_admin_desa_persen')->default(0);
         $table->integer('biaya_pengiriman')->nullable();
         $table->integer('total_setelah_biaya');
-        $table->integer('jumlah_uang')->nullable();
+        $table->text('catatan')->nullable();
+
+
         $table->timestamps();
-        $table->softDeletes();
     });
-}
+    }
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('transaksis');
+        Schema::dropIfExists('transaksi_produks');
     }
 };

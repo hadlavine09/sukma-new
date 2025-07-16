@@ -341,8 +341,9 @@
                                     products.forEach(item => {
                                         const diskonBadge = item.diskon > 0 ?
                                             `<span class="badge bg-success position-absolute m-3">-${item.diskon}%</span>` : '';
-                                        const tags = item.tags && item.tags.length ?
-                                            `<div class="mt-1 small text-muted">Tags: ${item.tags.join(', ')}</div>` : '';
+                                        const tags = item.tags && item.tags.length
+                                        ? `<div class="mt-1 small text-muted">Tags: ${item.tags.map(tag => tag.nama_tag).join(', ')}</div>`
+                                        : '';
                                         const linkDetailProduk = `detail/${encodeURIComponent(item.nama_produk)}?kode=${encodeURIComponent(item.kode_produk)}`;
                                         const html = `
                                             <div class="col">
@@ -512,53 +513,81 @@
                                                 });
                                             }
 
-                                            const addToCartBtn = product.querySelector('.add-to-cart-btn');
-                                            addToCartBtn.addEventListener('click', function (e) {
-                                                e.preventDefault();
-                                                const baseUrl = document.querySelector('meta[name="base-url"]').content;
-                                                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-                                                const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
-                                                if (!isAuthenticated) {
-                                                    const returnUrl = encodeURIComponent(window.location.href);
-                                                    window.location.href = `${baseUrl}/login?redirect=${returnUrl}`;
-                                                    return;
-                                                }
-                                                const qty = parseInt(product.querySelector('input[name="quantity"]')?.value) || 1;
-                                                const kodeProduk = new URL(product.querySelector('a').href).searchParams.get('kode');
-                                                const img = product.querySelector('img');
-                                                if (!kodeProduk) {
-                                                    alert("Kode produk tidak ditemukan.");
-                                                    return;
-                                                }
-                                                $.ajax({
-                                                    url: "{{ route('frontend.tambahkeranjang') }}",
-                                                    type: 'POST',
-                                                    headers: {
-                                                        'X-CSRF-TOKEN': csrfToken
-                                                    },
-                                                    data: {
-                                                        kode_produk: kodeProduk,
-                                                        quantity: qty
-                                                    },
-                                                    success: function (response) {
-                                                        if (response.status === 'success' || response.status === 'exists') {
-                                                            const imgRect = img.getBoundingClientRect();
-                                                            const cartRect = cartBtn.getBoundingClientRect();
-                                                            animateToCart(img, imgRect, cartRect);
-                                                            window.cartLoaded = false;
-                                                            if (typeof loadCartData === 'function') {
-                                                                loadCartData(true);
-                                                            }
-                                                        } else {
-                                                            alert(response.message || 'Gagal menambahkan ke keranjang.');
-                                                        }
-                                                    },
-                                                    error: function (xhr) {
-                                                        console.error(xhr.responseText);
-                                                        alert('Terjadi kesalahan saat mengirim ke server.');
-                                                    }
-                                                });
-                                            });
+                                          const addToCartBtn = product.querySelector('.add-to-cart-btn');
+addToCartBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+
+    const baseUrl = document.querySelector('meta[name="base-url"]').content;
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};
+
+    if (!isAuthenticated) {
+        const returnUrl = encodeURIComponent(window.location.href);
+        window.location.href = `${baseUrl}/login?redirect=${returnUrl}`;
+        return;
+    }
+
+    const qty = parseInt(product.querySelector('input[name="quantity"]')?.value) || 1;
+    const kodeProduk = new URL(product.querySelector('a').href).searchParams.get('kode');
+    const img = product.querySelector('img');
+
+    if (!kodeProduk) {
+        alert("Kode produk tidak ditemukan.");
+        return;
+    }
+
+    $.ajax({
+        url: "{{ route('frontend.tambahkeranjang') }}",
+        type: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': csrfToken
+        },
+        data: {
+            kode_produk: kodeProduk,
+            quantity: qty
+        },
+        success: function (response) {
+            if (response.status === 'success' || response.status === 'exists') {
+                const imgRect = img.getBoundingClientRect();
+                const cartRect = cartBtn.getBoundingClientRect();
+                animateToCart(img, imgRect, cartRect);
+                window.cartLoaded = false;
+
+                if (typeof loadCartData === 'function') {
+                    loadCartData(true);
+                }
+            } else {
+                alert(response.message || 'Gagal menambahkan ke keranjang.');
+            }
+        },
+        error: function (xhr) {
+            console.error(xhr);
+
+            let message = 'Terjadi kesalahan saat mengirim ke server.';
+
+            if (xhr.responseJSON) {
+                if (xhr.responseJSON.message) {
+                    message = xhr.responseJSON.message;
+                }
+
+                // Tampilkan error detail jika ada
+                if (xhr.responseJSON.error) {
+                    message += ` (${xhr.responseJSON.error})`;
+                }
+
+                // Tangani error validasi (422)
+                if (xhr.status === 422 && xhr.responseJSON.errors) {
+                    const errors = xhr.responseJSON.errors;
+                    const errorMessages = Object.values(errors).flat().join('\n');
+                    message += `\n\nDetail:\n${errorMessages}`;
+                }
+            }
+
+            alert(message);
+        }
+    });
+});
+
                                         });
                                     };
                                 });

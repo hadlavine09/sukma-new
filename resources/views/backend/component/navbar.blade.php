@@ -45,8 +45,12 @@
           <!-- User Menu-->
           <li class="dropdown"><a class="app-nav__item" href="{{ route('dashboard')}}" data-bs-toggle="dropdown" aria-label="Open Profile Menu"><i class="bi bi-person fs-4"></i></a>
             <ul class="dropdown-menu settings-menu dropdown-menu-right">
-              <li><a class="dropdown-item" href="{{ asset('assets_backend/page-user.html')}}"><i class="bi bi-gear me-2 fs-5"></i> Settings</a></li>
-              <li><a class="dropdown-item" href="{{ asset('assets_backend/page-user.html')}}"><i class="bi bi-person me-2 fs-5"></i> Profile</a></li>
+         @if(Auth::user()->hasRole('toko'))
+    <li><a class="dropdown-item" href="{{ route('profile_toko') }}">
+        <i class="bi bi-person me-2 fs-5"></i> Profile
+    </a></li>
+@endif
+
               {{-- <li><a class="dropdown-item" href="{{ asset('assets_backend/page-login.html')}}"><i class="bi bi-box-arrow-right me-2 fs-5"></i> Logout</a></li> --}}
               <li>
                 <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">

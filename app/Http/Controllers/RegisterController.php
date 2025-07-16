@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Laratrust\Models\Role;
+use Illuminate\Auth\Events\Registered;
 
 class RegisterController extends Controller
 {
@@ -61,16 +62,18 @@ class RegisterController extends Controller
                 'password' => Hash::make($validated['password']),
             ]);
 
+
             // Ambil role 'toko'
             $role = Role::where('name', 'toko')->firstOrFail();
 
             // Assign role menggunakan Laratrust
             $user->roles()->attach($role->id);
 
-            DB::commit();
 
             // Login user
             auth()->login($user);
+            // event(new Registered($user));
+            DB::commit();
 
             // Redirect ke route 'verifikasitoko'
             return redirect()->route('verifikasitoko')->with('success', 'Registrasi berhasil sebagai penjual.');

@@ -16,6 +16,7 @@ use App\Http\Controllers\RegisterController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UmkmAuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\TransaksiController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DetailProdukController;
@@ -23,6 +24,7 @@ use App\Http\Controllers\KategoriTokoController;
 use App\Http\Controllers\KategoriProdukController;
 use App\Http\Controllers\UserManagement\RoleController;
 use App\Http\Controllers\UserManagement\UserController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\UserManagement\HakAksesController;
 use App\Http\Controllers\UserManagement\PermissionController;
 
@@ -50,6 +52,16 @@ Route::middleware('guest')->group(function () {
     Route::post('/register-toko', [RegisterController::class, 'registertoko'])->name('register.toko');
 });
 
+// Route::get('/email/verify', function () {
+//     return view('auth.verify');
+// })->middleware('auth')->name('verification.notice');
+
+// Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+//     $request->fulfill();
+
+//     return redirect('/verifikasi-toko');
+// })->middleware(['auth', 'signed'])->name('verification.verify');
+
 Route::get('lang/{lang}', function ($lang) {
     if (in_array($lang, ['en', 'id'])) {
         session(['locale' => $lang]);
@@ -72,7 +84,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
         Route::get('/aksesDashboard', [DashboardController::class, 'aksesDashboard'])->name('aksesDashboard');
     });
-    Route::middleware('role:toko')->group(function () {
+    Route::get('/Profile-Toko', [DashboardController::class, 'profile_toko'])->name('profile_toko');
+
+    Route::middleware(['auth','role:toko',])->group(function () {
         // Route::get('/dashboard-toko', [IzinTokoController::class, 'dashboard_toko'])->name('dashboardtoko');
         Route::get('/verifikasi-toko', [IzinTokoController::class, 'verifikasi_toko'])->name('verifikasitoko');
         Route::post('/verifikasi-toko/{step}', [IzinTokoController::class, 'verifikasi_toko_store'])->name('verifikasitokostore');
@@ -91,6 +105,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('keranjang', [CartController::class, 'keranjang'])->name('frontend.keranjang');
         Route::get('keranjang_down', [CartController::class, 'keranjang_dropdown'])->name('frontend.keranjang_down');
         Route::post('prepare-checkout', [CartController::class, 'prepareCheckout'])->name('frontend.prepareCheckout');
+        Route::post('prepare-checkout-sekarang', [CartController::class, 'prepareCheckoutSekarang'])->name('frontend.prepareCheckoutSekarang');
         Route::get('checkout/{kode}', [CartController::class, 'checkout'])->name('frontend.checkout');
         // Rute untuk menyimpan alamat yang dipilih
         Route::post('/checkout/simpan-alamat', [CartController::class, 'simpanAlamat'])->name('checkout.simpanAlamat');
@@ -98,9 +113,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/checkout/pilih-voucher', [CartController::class, 'pilihVoucher'])->name('checkout.pilihVoucher');
         Route::prefix('Alamat')->group(function () {
             Route::get('/', [AlamatController::class, 'index'])->name('alamat.index');
+            // Ambil detail alamat (AJAX edit)
+            Route::get('/alamat/{id}', [AlamatController::class, 'show'])->name('alamat.show');
+
             Route::post('store', [AlamatController::class, 'store'])->name('alamat.store');
+Route::put('/alamat/{id}', [AlamatController::class, 'update'])->name('alamat.update');
             Route::post('/updateUtama/{id}', [AlamatController::class, 'updateutama'])->name('alamat.updateutama');
-            Route::post('/destroy/{id}', [AlamatController::class, 'destroy'])->name('alamat.destroy');
+            Route::delete('/alamat/{id}', [AlamatController::class, 'destroy'])->name('alamat.destroy');
         });
 
         Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('frontend.checkoutstore');
@@ -280,16 +299,7 @@ Route::prefix('Manajemen-Material')->group(function () {
         Route::get('show/{id}', [TransaksiMaterial::class, 'show'])->name('transaksi_material.show');
     });
 });
-Route::prefix('Manajemen-Transaksi')->group(function () {
-    Route::prefix('Cart')->group(function () {
-        Route::get('/', [CartController::class, 'index'])->name('cart.index');
-        Route::get('create', [CartController::class, 'create'])->name('cart.create');
-        // Route::get('checkout/{selected}', [CartController::class, 'checkout'])->name('cart.checkout');
-        // Route::get('checkoutstore', [CartController::class, 'checkoutstore'])->name('cart.checkoutstore');
-        Route::post('store', [CartController::class, 'store'])->name('cart.store');
-        Route::put('update/{id}', [CartController::class, 'update'])->name('cart.update');
-        Route::delete('destroy/{id}', [CartController::class, 'destroy'])->name('cart.destroy');
-    });
+Route::prefix('manajemen-transaksi')->group(function () {
     Route::prefix('supplier')->group(function () {
         Route::get('index', [SupplierController::class, 'index'])->name('supplier.index');
         Route::get('create', [SupplierController::class, 'create'])->name('supplier.create');
@@ -300,13 +310,13 @@ Route::prefix('Manajemen-Transaksi')->group(function () {
         Route::get('show/{id}', [SupplierController::class, 'show'])->name('supplier.show');
     });
     Route::prefix('transaksi')->group(function () {
-        Route::get('/', [TransaksiMaterial::class, 'index'])->name('transaksi_material.index');
-        Route::get('create', [TransaksiMaterial::class, 'create'])->name('transaksi_material.create');
-        Route::post('store', [TransaksiMaterial::class, 'store'])->name('transaksi_material.store');
-        Route::put('update/{id}', [TransaksiMaterial::class, 'update'])->name('transaksi_material.update');
-        Route::post('destroy', [TransaksiMaterial::class, 'destroy'])->name('transaksi_material.destroy');
-        Route::get('edit/{id}', [TransaksiMaterial::class, 'edit'])->name('transaksi_material.edit');
-        Route::get('show/{id}', [TransaksiMaterial::class, 'show'])->name('transaksi_material.show');
+        Route::get('/', [TransaksiController::class, 'index'])->name('transaksi.index');
+        Route::get('create', [TransaksiController::class, 'create'])->name('transaksi.create');
+        Route::post('store', [TransaksiController::class, 'store'])->name('transaksi.store');
+        Route::put('update/{id}', [TransaksiController::class, 'update'])->name('transaksi.update');
+        Route::post('destroy', [TransaksiController::class, 'destroy'])->name('transaksi.destroy');
+        Route::get('edit/{id}', [TransaksiController::class, 'edit'])->name('transaksi.edit');
+        Route::get('show/{id}', [TransaksiController::class, 'show'])->name('transaksi.show');
     });
 });
 Route::prefix('FrontEnd')->group(function () {

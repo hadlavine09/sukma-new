@@ -16,6 +16,26 @@ class AlamatController extends Controller
     {
         //
     }
+public function show($id)
+{
+    $userId = auth()->id();
+
+    $alamat = Alamat::where('id', $id)
+                    ->where('user_id', $userId)
+                    ->first();
+
+    if (!$alamat) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Alamat tidak ditemukan.'
+        ], 404);
+    }
+
+    return response()->json([
+        'success' => true,
+        'data' => $alamat
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -56,6 +76,41 @@ public function store(Request $request)
         return response()->json([
             'success' => false,
             'message' => 'Gagal menyimpan alamat: ' . $e->getMessage()
+        ], 500);
+    }
+}
+public function update(Request $request, $id)
+{
++    $request->validate([
+        'nama_alamat'   => 'required|string|max:100',
+        'nama_penerima' => 'required|string|max:100',
+        'no_hp'         => 'required|string|max:20',
+        'alamat_lengkap'=> 'required|string',
+    ]);
+
+    try {
+        $userId = auth()->id();
+
+        $alamat = Alamat::where('id', $id)
+                        ->where('user_id', $userId)
+                        ->firstOrFail();
+
+        $alamat->update([
+            'nama_penerima'  => $request->nama_penerima,
+            'nama_alamat'    => $request->nama_alamat,
+            'no_hp'          => $request->no_hp,
+            'alamat_lengkap' => $request->alamat_lengkap,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Alamat berhasil diperbarui.',
+            'data'    => $alamat
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memperbarui alamat: ' . $e->getMessage()
         ], 500);
     }
 }
@@ -122,40 +177,48 @@ public function updateAlamat(Request $request, $id)
     }
 }
 
-
-  public function destroy($id)
+public function destroy($id)
 {
     DB::beginTransaction();
 
     try {
         $userId = auth()->id();
 
-        // Ambil alamat yang mau dihapus (dan validasi milik user)
         $alamat = Alamat::where('id', $id)
                         ->where('user_id', $userId)
                         ->firstOrFail();
 
-        // Cek jika alamat tersebut adalah alamat utama
         if ($alamat->is_utama) {
-            return redirect()->back()->with('warning', 'Alamat utama tidak dapat dihapus. Silakan ubah alamat utama terlebih dahulu.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Alamat utama tidak dapat dihapus. Silakan ubah alamat utama terlebih dahulu.'
+            ], 400);
         }
 
-        // Cek jumlah total alamat milik user
         $jumlahAlamat = Alamat::where('user_id', $userId)->count();
 
-        // Tidak boleh hapus jika cuma punya satu alamat
         if ($jumlahAlamat <= 1) {
-            return redirect()->back()->with('warning', 'Minimal harus memiliki satu alamat. Alamat tidak dapat dihapus.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Minimal harus memiliki satu alamat. Alamat tidak dapat dihapus.'
+            ], 400);
         }
 
-        // Hapus alamat
         $alamat->delete();
 
         DB::commit();
-        return redirect()->back()->with('success', 'Alamat berhasil dihapus.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Alamat berhasil dihapus.'
+        ]);
     } catch (\Exception $e) {
         DB::rollBack();
-        return redirect()->back()->with('error', 'Gagal menghapus alamat: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal menghapus alamat: ' . $e->getMessage()
+        ], 500);
     }
 }
+
+
 }

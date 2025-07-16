@@ -174,10 +174,117 @@
                     <a href="{{ route('izin_toko.index') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Kembali
                     </a>
+                    <button onclick="verifikasiToko('{{ $tokoshow->kode_toko }}', true)" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Izinkan
+                    </button>
+<button class="btn btn-danger" onclick="showTolakModal('{{ $tokoshow->kode_toko }}')">
+    <i class="bi bi-x-circle"></i> Tolak
+</button>
+
                 </div>
 
             </div>
         </div>
     </div>
-</main>
+</main><!-- Modal Penolakan -->
+<!-- Modal Tolak Toko -->
+<div class="modal fade" id="modalTolakToko" tabindex="-1" aria-labelledby="modalTolakLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="formTolakToko">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tolak Toko</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="kode_toko_tolak" name="kode_toko">
+                    <div class="mb-3">
+                        <label for="catatan_penolakan" class="form-label">Catatan Penolakan</label>
+                        <textarea id="catatan_penolakan" class="form-control" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Tolak</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@endsection
+@section('js_content')
+<script>
+function showTolakModal(kodeToko) {
+    document.getElementById('kode_toko_tolak').value = kodeToko;
+    const modal = new bootstrap.Modal(document.getElementById('modalTolakToko'));
+    modal.show();
+}
+
+document.getElementById('formTolakToko').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const kodeToko = document.getElementById('kode_toko_tolak').value;
+    const catatan = document.getElementById('catatan_penolakan').value.trim();
+
+    if (!catatan) {
+        alert('Mohon isi alasan penolakan.');
+        return;
+    }
+
+    fetch("{{ route('izin_toko.tidak_izinkan') }}", {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            kode_toko: kodeToko,
+            catatan_penolakan: catatan
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        if (data.status) {
+            // Redirect ke halaman index setelah sukses
+            window.location.href = "{{ route('izin_toko.index') }}";
+        }
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Terjadi kesalahan saat memproses penolakan.');
+    });
+});
+
+function verifikasiToko(kode_toko, izinkan = true) {
+    const url = "{{ route('izin_toko.izinkan') }}";
+
+    if (izinkan) {
+        if (confirm('Yakin ingin mengizinkan toko ini?')) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    kode_toko: kode_toko
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.status) {
+                    // Redirect ke halaman index setelah sukses
+                    window.location.href = "{{ route('izin_toko.index') }}";
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Terjadi kesalahan saat memproses.');
+            });
+        }
+    }
+}
+</script>
 @endsection
