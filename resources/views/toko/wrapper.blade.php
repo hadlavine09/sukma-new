@@ -345,7 +345,7 @@
                         @endif
 
                         {{-- STEP 2 --}}
-                       {{-- STEP 2 --}}
+                        {{-- STEP 2 --}}
                         @if ($step == 2)
                             <h4 class="mb-4 fw-semibold">Dokumen Identitas</h4>
 
@@ -353,7 +353,8 @@
                                 <label class="form-label">Foto KTP</label>
                                 <input type="file" name="foto_ktp" class="form-control" accept="image/*">
                                 @if (!empty(optional($toko->detailToko)->foto_ktp))
-                                    <img src="{{ asset('storage/' . $toko->detailToko->foto_ktp) }}" width="200" class="mt-2">
+                                    <img src="{{ asset('storage/' . $toko->detailToko->foto_ktp) }}" width="200"
+                                        class="mt-2">
                                 @endif
                             </div>
 
@@ -361,7 +362,8 @@
                                 <label class="form-label">Foto KK</label>
                                 <input type="file" name="foto_kk" class="form-control" accept="image/*">
                                 @if (!empty(optional($toko->detailToko)->foto_kk))
-                                    <img src="{{ asset('storage/' . $toko->detailToko->foto_kk) }}" width="200" class="mt-2">
+                                    <img src="{{ asset('storage/' . $toko->detailToko->foto_kk) }}" width="200"
+                                        class="mt-2">
                                 @endif
                             </div>
 
@@ -370,18 +372,22 @@
                                 <input type="text" name="nama_ktp" class="form-control"
                                     value="{{ old('nama_ktp', optional($toko->detailToko)->nama_ktp) }}" required>
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label">Nomor KTP</label>
                                 <input type="text" name="nomor_ktp" class="form-control"
-                                    value="{{ old('nomor_ktp', optional($toko->detailToko)->nomor_ktp) }}" required>
+                                    value="{{ old('nomor_ktp', optional($toko->detailToko)->nomor_ktp) }}" required
+                                    pattern="^[1-9][0-9]*$"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^0+/, '')">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Nomor KK</label>
                                 <input type="text" name="nomor_kk" class="form-control"
-                                    value="{{ old('nomor_kk', optional($toko->detailToko)->nomor_kk) }}" required>
+                                    value="{{ old('nomor_kk', optional($toko->detailToko)->nomor_kk) }}" required
+                                    pattern="^[1-9][0-9]*$"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^0+/, '')">
                             </div>
+
                         @endif
 
                         {{-- STEP 3 --}}
@@ -393,12 +399,14 @@
                                 <input type="text" name="nama_bank" class="form-control"
                                     value="{{ old('nama_bank', $toko->detailToko->nama_bank ?? '') }}">
                             </div>
-
                             <div class="mb-3">
                                 <label class="form-label">Nomor Rekening</label>
                                 <input type="text" name="nomor_rekening" class="form-control"
-                                    value="{{ old('nomor_rekening', $toko->detailToko->nomor_rekening ?? '') }}">
+                                    value="{{ old('nomor_rekening', $toko->detailToko->nomor_rekening ?? '') }}"
+                                    required pattern="^[1-9][0-9]*$"
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/^0+/, '')">
                             </div>
+
 
                             <div class="mb-3">
                                 <label class="form-label">Nama Pemilik Rekening</label>
