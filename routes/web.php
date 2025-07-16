@@ -21,6 +21,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DetailProdukController;
 use App\Http\Controllers\KategoriTokoController;
+use App\Http\Controllers\TampilanTokoController;
 use App\Http\Controllers\KategoriProdukController;
 use App\Http\Controllers\UserManagement\RoleController;
 use App\Http\Controllers\UserManagement\UserController;
