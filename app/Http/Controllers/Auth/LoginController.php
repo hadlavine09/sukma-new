@@ -45,7 +45,7 @@ class LoginController extends Controller
             if ($toko) {
                 return match ($toko->status_toko) {
                     'proses', 'tidak_diizinkan' => route('verifikasi_toko.wait'),
-                    'izinkan'                   => route('dashboard'),
+                    'izinkan'                   => route('dashboardtoko'),
                     default                     => route('verifikasi_toko.wait'),
                 };
             }

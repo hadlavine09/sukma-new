@@ -20,6 +20,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\DetailProdukController;
 use App\Http\Controllers\KategoriTokoController;
+use App\Http\Controllers\TampilanTokoController;
 use App\Http\Controllers\KategoriProdukController;
 use App\Http\Controllers\UserManagement\RoleController;
 use App\Http\Controllers\UserManagement\UserController;
@@ -73,10 +74,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/aksesDashboard', [DashboardController::class, 'aksesDashboard'])->name('aksesDashboard');
     });
     Route::middleware('role:toko')->group(function () {
-        // Route::get('/dashboard-toko', [IzinTokoController::class, 'dashboard_toko'])->name('dashboardtoko');
-        Route::get('/verifikasi-toko', [IzinTokoController::class, 'verifikasi_toko'])->name('verifikasitoko');
-        Route::post('/verifikasi-toko/{step}', [IzinTokoController::class, 'verifikasi_toko_store'])->name('verifikasitokostore');
-        Route::get('/verifikasi-toko/wait', [IzinTokoController::class, 'waitPage'])->name('verifikasi_toko.wait');
+    Route::get('/dashboard-toko', [TampilanTokoController::class, 'index'])->name('dashboardtoko');
+
+    Route::get('/verifikasi-toko', [IzinTokoController::class, 'verifikasi_toko'])->name('verifikasitoko');
+    Route::post('/verifikasi-toko/{step}', [IzinTokoController::class, 'verifikasi_toko_store'])->name('verifikasitokostore');
+    Route::get('/verifikasi-toko/wait', [IzinTokoController::class, 'waitPage'])->name('verifikasi_toko.wait');
     });
 
     // Routes yang hanya untuk role "user"
