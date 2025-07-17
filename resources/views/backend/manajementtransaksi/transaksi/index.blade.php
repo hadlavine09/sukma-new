@@ -38,6 +38,7 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Kode Transaksi</th>
+                                    <th>Pembeli</th>
                                     <th>Metode Pembayaran</th>
                                     <th>Total Bayar</th>
                                     <th>Status</th>
@@ -46,7 +47,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- DataTables akan isi di sini -->
+                                <!-- DataTables akan mengisi -->
                             </tbody>
                         </table>
                     </div>
@@ -67,12 +68,16 @@
     <script>
         $(document).ready(function () {
             var transaksiTable = $('#transaksiTable').DataTable({
-                processing: true,
-                serverSide: true,
+                processing: false,
+                serverSide: false,
+                responsive: false,
+                scrollX: false,
+                scrollY: false,
                 ajax: '{!! route('transaksi.index') !!}',
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', className: "text-center" },
                     { data: 'kode_transaksi', name: 'kode_transaksi' },
+                    { data: 'pembeli', name: 'pembeli' },
                     { data: 'metode_pembayaran', name: 'metode_pembayaran', className: "text-center" },
                     { data: 'total_bayar', name: 'total_bayar', className: "text-end" },
                     { data: 'status_transaksi', name: 'status_transaksi', className: "text-center" },
@@ -81,7 +86,6 @@
                 ]
             });
 
-            // Auto-dismiss alert after 3 seconds
             setTimeout(function () {
                 $('#success-alert').fadeOut('slow');
                 $('#error-alert').fadeOut('slow');

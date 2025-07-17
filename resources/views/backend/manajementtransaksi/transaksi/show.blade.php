@@ -2,140 +2,141 @@
 
 @section('content')
 <main class="app-content">
-  <div class="app-title">
-    <h1><i class="bi bi-receipt"></i> Detail Transaksi</h1>
-  </div>
+    <div class="app-title">
+        <h1><i class="bi bi-receipt"></i> Detail Transaksi</h1>
+    </div>
 
-  <!-- INFORMASI TRANSAKSI -->
-  <div class="tile p-4 shadow-sm bg-white rounded mb-4">
-    <div class="row justify-content-between">
-      <div class="col-md-6">
+    <!-- Informasi Transaksi Utama -->
+    <div class="tile p-4 bg-white shadow rounded mb-4">
         <h5>Informasi Transaksi</h5>
-        <ul class="list-unstyled small">
-          <li><strong>Kode Transaksi:</strong> {{ $transaksi->kode_transaksi }}</li>
-          <li><strong>Status Transaksi:</strong>
-            <span class="badge bg-{{ $transaksi->status_transaksi == 'selesai' ? 'success' : 'warning' }}">
-              {{ ucfirst($transaksi->status_transaksi) }}
-            </span>
-          </li>
-          <li><strong>Status Pengiriman:</strong>
-            <span class="badge bg-{{ $transaksi->status_pengiriman == 'selesai' ? 'success' : 'info' }}">
-              {{ ucfirst($transaksi->status_pengiriman) }}
-            </span>
-          </li>
-          <li><strong>Metode Pembayaran:</strong> {{ strtoupper($transaksi->metode_pembayaran) }}</li>
-          <li><strong>Tanggal Transaksi:</strong> {{ \Carbon\Carbon::parse($transaksi->created_at)->format('d M Y, H:i') }}</li>
-        </ul>
-      </div>
-      <div class="col-md-5 text-md-end mt-3 mt-md-0">
-        <h5>Total Bayar</h5>
-        <h4 class="text-success">Rp {{ number_format($transaksi->total_bayar, 2, ',', '.') }}</h4>
-      </div>
-    </div>
-  </div>
+        <table class="table table-bordered">
+            <tr>
+                <th>Kode Transaksi</th>
+                <td>{{ $transaksi->kode_transaksi }}</td>
+            </tr>
+            <tr>
+                <th>Nama User</th>
+                <td>{{ $transaksi->nama_user }}</td>
+            </tr>
+            <tr>
+                <th>Metode Pembayaran</th>
+                <td>{{ strtoupper($transaksi->metode_pembayaran) }}</td>
+            </tr>
+            @if ($roleName === 'superadmin')
 
-  <!-- INFORMASI PEMBELI & ALAMAT -->
-  <div class="tile p-4 shadow-sm bg-white rounded mb-4">
-    <div class="row">
-      <div class="col-md-6">
-        <h5>Data Pembeli</h5>
-        <ul class="list-unstyled small">
-          <li><strong>Nama:</strong> {{ $transaksi->user->name ?? '-' }}</li>
-          <li><strong>Email:</strong> {{ $transaksi->user->email ?? '-' }}</li>
-          <li><strong>No. HP:</strong> {{ $transaksi->user->phone ?? '-' }}</li>
-        </ul>
-      </div>
-      <div class="col-md-6">
+            <tr>
+                <th>Subtotal</th>
+                <td>Rp{{ number_format($transaksi->subtotal) }}</td>
+            </tr>
+            <tr>
+                <th>Biaya Admin Desa</th>
+                <td>Rp{{ number_format($transaksi->biaya_admin_desa_persen) }}</td>
+            </tr>
+            <tr>
+                <th>Biaya Pengiriman</th>
+                <td>Rp{{ number_format($transaksi->biaya_pengiriman) }}</td>
+            </tr>
+            <tr>
+                <th>Total Setelah Biaya</th>
+                <td>Rp{{ number_format($transaksi->total_setelah_biaya) }}</td>
+            </tr>
+            <tr>
+                <th>Jumlah Uang (Transfer)</th>
+                <td>Rp{{ number_format($transaksi->jumlah_uang ?? 0) }}</td>
+            </tr>
+
+            <tr>
+                <th>Status Transaksi</th>
+                <td>{{ ucfirst($transaksi->status_transaksi) }}</td>
+            </tr>
+            @endif
+        </table>
+    </div>
+
+    <!-- Informasi Alamat -->
+    <div class="tile p-4 bg-white shadow rounded mb-4">
         <h5>Alamat Pengiriman</h5>
-        @if($transaksi->alamat)
-        <ul class="list-unstyled small">
-          <li><strong>Label Alamat:</strong> {{ $transaksi->alamat->nama_alamat }}</li>
-          <li><strong>Nama Penerima:</strong> {{ $transaksi->alamat->nama_penerima }}</li>
-          <li><strong>No. HP:</strong> {{ $transaksi->alamat->no_hp }}</li>
-          <li><strong>Alamat Lengkap:</strong><br> {{ $transaksi->alamat->alamat_lengkap }}</li>
-        </ul>
-        @else
-        <p class="text-muted">Alamat tidak tersedia.</p>
-        @endif
-      </div>
+        <table class="table table-bordered">
+            <tr>
+                <th>Label Alamat</th>
+                <td>{{ $transaksi->nama_alamat }}</td>
+            </tr>
+            <tr>
+                <th>Nama Penerima</th>
+                <td>{{ $transaksi->nama_penerima }}</td>
+            </tr>
+            <tr>
+                <th>No HP</th>
+                <td>{{ $transaksi->no_hp }}</td>
+            </tr>
+            <tr>
+                <th>Alamat Lengkap</th>
+                <td>{{ $transaksi->alamat_lengkap }}</td>
+            </tr>
+        </table>
     </div>
-  </div>
 
-  <!-- PRODUK YANG DIBELI -->
-  <div class="tile p-4 shadow-sm bg-white rounded mb-4">
-    <h5 class="mb-3">Produk yang Dibeli</h5>
-    <table class="table table-bordered align-middle">
-      <thead class="table-light">
-        <tr>
-          <th>Produk</th>
-          <th class="text-center">Harga</th>
-          <th class="text-center">Jumlah</th>
-          <th class="text-end">Subtotal</th>
-        </tr>
-      </thead>
-      <tbody>
-        @foreach($produkDetails as $p)
-        <tr>
-          <td>
-            <div class="d-flex align-items-center">
-              @if($p['foto'])
-              <img src="{{ asset($p['foto']) }}" alt="foto produk" class="rounded me-3" style="width:60px; height:60px; object-fit:cover;">
-              @endif
-              <div>
-                <div class="fw-semibold">{{ $p['nama'] }}</div>
-                <div class="small text-muted">ID: {{ $p['produk_id'] ?? '-' }}</div>
-              </div>
-            </div>
-          </td>
-          <td class="text-center">Rp {{ number_format($p['harga'], 2, ',', '.') }}</td>
-          <td class="text-center">{{ $p['jumlah'] }}</td>
-          <td class="text-end">Rp {{ number_format($p['subtotal'], 2, ',', '.') }}</td>
-        </tr>
-        @endforeach
-      </tbody>
-    </table>
-  </div>
+    <!-- Transaksi Toko dan Produk -->
+    @foreach ($transaksiTokos as $toko)
+    <div class="tile p-4 bg-light shadow-sm rounded mb-4">
+        <h5 class="mb-3">Toko: {{ $toko->nama_toko }}</h5>
+        <table class="table table-bordered">
+            <tr>
+                <th>Status Pengiriman</th>
+                <td>{{ ucfirst($toko->status_pengiriman) }}</td>
+            </tr>
+            <tr>
+                <th>Subtotal Toko</th>
+                <td>Rp{{ number_format($toko->subtotal) }}</td>
+            </tr>
+            <tr>
+                <th>Biaya Admin Desa</th>
+                <td>Rp{{ number_format($toko->biaya_admin_desa_persen) }}</td>
+            </tr>
+            <tr>
+                <th>Biaya Pengiriman</th>
+                <td>Rp{{ number_format($toko->biaya_pengiriman) }}</td>
+            </tr>
+            <tr>
+                <th>Total Setelah Biaya</th>
+                <td>Rp{{ number_format($toko->total_setelah_biaya) }}</td>
+            </tr>
+            <tr>
+                <th>Jumlah Uang (Transfer Toko)</th>
+                <td>Rp{{ number_format($toko->jumlah_uang ?? 0) }}</td>
+            </tr>
+            <tr>
+                <th>Status Transaksi</th>
+                <td>{{ ucfirst($toko->status_transaksi) }}</td>
+            </tr>
+        </table>
 
-  <!-- RINGKASAN PEMBAYARAN -->
-  <div class="tile p-4 shadow-sm bg-white rounded mb-4">
-    <h5>Ringkasan Pembayaran</h5>
-    <div class="row">
-      <div class="col-md-6 offset-md-6">
-        <ul class="list-group list-group-flush small">
-          <li class="list-group-item d-flex justify-content-between">
-            <span>Subtotal</span>
-            <strong>Rp {{ number_format($transaksi->subtotal, 2, ',', '.') }}</strong>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>Diskon</span>
-            <strong>- Rp {{ number_format($transaksi->diskon, 2, ',', '.') }}</strong>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span>Biaya Pengiriman</span>
-            <strong>Rp {{ number_format($transaksi->biaya_pengiriman ?? 0, 2, ',', '.') }}</strong>
-          </li>
-          <li class="list-group-item d-flex justify-content-between">
-            <span><strong>Total Bayar</strong></span>
-            <strong class="text-success">Rp {{ number_format($transaksi->total_bayar, 2, ',', '.') }}</strong>
-          </li>
-        </ul>
-      </div>
+        <h6 class="mt-4">Detail Produk:</h6>
+        <table class="table table-bordered mt-2">
+            <thead class="table-dark">
+                <tr>
+                    <th>Produk</th>
+                    <th>Qty</th>
+                    <th>Harga Satuan</th>
+                    <th>Subtotal</th>
+                    <th>Catatan</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($toko->produks as $produk)
+                <tr>
+                    <td>{{ $produk->nama_produk }}</td>
+                    <td>{{ $produk->qty }}</td>
+                    <td>Rp{{ number_format($produk->harga_satuan) }}</td>
+                    <td>Rp{{ number_format($produk->subtotal_produk) }}</td>
+                    <td>{{ $produk->catatan ?? '-' }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
-  </div>
+    @endforeach
 
-  <!-- CATATAN TRANSAKSI -->
-  @if($transaksi->catatan)
-  <div class="tile p-4 shadow-sm bg-white rounded mb-4">
-    <h5>Catatan Pembeli</h5>
-    <p class="small">{{ $transaksi->catatan }}</p>
-  </div>
-  @endif
-
-  <!-- KEMBALI -->
-  <div class="text-start mt-4">
-    <a href="{{ route('transaksi.index') }}" class="btn btn-outline-secondary">
-      <i class="bi bi-arrow-left"></i> Kembali ke Daftar Transaksi
-    </a>
-  </div>
+    <a href="{{ route('transaksi.index') }}" class="btn btn-secondary mt-3">Kembali</a>
 </main>
 @endsection

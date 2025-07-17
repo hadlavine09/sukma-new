@@ -14,57 +14,74 @@ use Yajra\DataTables\Facades\DataTables;
 
 class TransaksiController extends Controller
 {
-
 public function index(Request $request)
 {
+    $user = auth()->user();
+
+    // Ambil role user
+    $role = DB::table('role_user')
+        ->where('user_id', $user->id)
+        ->join('roles', 'role_user.role_id', '=', 'roles.id')
+        ->select('roles.name')
+        ->first();
+
     if ($request->ajax()) {
-        $loginId = Auth::id();
+        if ($role && $role->name === 'toko') {
+            // Ambil ID toko milik user login
+            $tokoId = DB::table('tokos')->where('pemilik_toko_id', $user->id)->value('id');
 
-        // Ambil toko milik user login
-        $toko = DB::table('tokos')->where('pemilik_toko_id', $loginId)->first();
-
-        if (!$toko) {
-            return response()->json(['data' => []]);
+            $transaksi = DB::table('transaksi_tokos')
+                ->join('transaksis', 'transaksi_tokos.transaksi_id', '=', 'transaksis.id')
+                ->join('users', 'transaksis.user_id', '=', 'users.id')
+                ->where('transaksi_tokos.toko_id', $tokoId)
+                ->where('transaksi_tokos.status_pengiriman', 'proses')
+                ->select(
+                    'transaksis.id as transaksi_id',
+                    'transaksis.kode_transaksi',
+                    'users.name as pembeli',
+                    'transaksis.metode_pembayaran',
+                    'transaksis.status_transaksi',
+                    'transaksi_tokos.total_setelah_biaya as total_bayar',
+                    'transaksis.created_at'
+                )
+                ->orderByDesc('transaksis.created_at')
+                ->get();
+        } else {
+            // Superadmin
+            $transaksi = DB::table('transaksis')
+                ->join('users', 'transaksis.user_id', '=', 'users.id')
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('transaksi_tokos')
+                        ->whereRaw('transaksi_tokos.transaksi_id = transaksis.id')
+                        ->where('transaksi_tokos.status_pengiriman', 'proses');
+                })
+                ->select(
+                    'transaksis.id as transaksi_id',
+                    'transaksis.kode_transaksi',
+                    'users.name as pembeli',
+                    'transaksis.metode_pembayaran',
+                    'transaksis.status_transaksi',
+                    'transaksis.total_setelah_biaya as total_bayar',
+                    'transaksis.created_at'
+                )
+                ->orderByDesc('transaksis.created_at')
+                ->get();
         }
-
-        // Ambil semua ID produk milik toko ini
-        $produkIds = DB::table('produks')
-            ->where('toko_id', $toko->id)
-            ->pluck('id')
-            ->toArray();
-
-        // Ambil semua transaksi
-        $allTransaksi = DB::table('transaksis')->orderByDesc('created_at')->get();
-
-        // Filter transaksi yang memiliki produk_id milik toko ini
-        $filtered = $allTransaksi->filter(function ($transaksi) use ($produkIds) {
-            $produkJson = json_decode($transaksi->produk, true);
-
-            if (!is_array($produkJson)) return false;
-
-            foreach ($produkJson as $item) {
-                if (in_array($item['produk_id'], $produkIds)) {
-                    return true;
-                }
-            }
-
-            return false;
-        });
-
-        return DataTables::of($filtered)
+        return DataTables::of($transaksi)
             ->addIndexColumn()
-            ->editColumn('total_bayar', function ($data) {
-                return 'Rp ' . number_format($data->total_bayar, 2, ',', '.');
-            })
             ->editColumn('metode_pembayaran', function ($data) {
                 return strtoupper($data->metode_pembayaran);
             })
+            ->editColumn('total_bayar', function ($data) {
+                return 'Rp ' . number_format($data->total_bayar, 0, ',', '.');
+            })
             ->editColumn('created_at', function ($data) {
-                return Carbon::parse($data->created_at)->format('d M Y, H:i');
+                return \Carbon\Carbon::parse($data->created_at)->format('d M Y, H:i');
             })
             ->addColumn('action', function ($data) {
                 return '
-                    <a href="' . route('transaksi.show', $data->id) . '" class="btn btn-info btn-sm">
+                    <a href="' . route('transaksi.show', $data->transaksi_id) . '" class="btn btn-info btn-sm">
                         <i class="bi bi-eye"></i> Detail
                     </a>
                 ';
@@ -75,6 +92,8 @@ public function index(Request $request)
 
     return view('backend.manajementtransaksi.transaksi.index');
 }
+
+
 
     /**
      * Display a listing of the resource.
@@ -239,7 +258,7 @@ public function store(Request $request)
         'catatan' => 'nullable|array',
         'metode_pembayaran' => 'required|in:cod,transfer',
         'catatan_umum' => 'nullable|string',
-        'jumlah_uang' => 'nullable|integer|min:1', // validasi manual di bawah
+        'jumlah_uang' => 'nullable|integer|min:1',
     ]);
 
     $userId = auth()->id();
@@ -267,7 +286,6 @@ public function store(Request $request)
         return response()->json(['success' => false, 'message' => 'Keranjang kosong atau tidak valid']);
     }
 
-    // Cek stok
     foreach ($cartItems as $item) {
         if ($item->quantity > $item->stok_produk) {
             return response()->json([
@@ -277,7 +295,6 @@ public function store(Request $request)
         }
     }
 
-    // Hitung total
     $subtotal = 0;
     foreach ($cartItems as $item) {
         $subtotal += $item->harga_produk * $item->quantity;
@@ -286,8 +303,8 @@ public function store(Request $request)
     $biayaAdmin = intval(($subtotal * 10) / 100);
     $biayaPengiriman = intval(($subtotal * 2) / 100);
     $totalBayar = $subtotal + $biayaAdmin + $biayaPengiriman;
+    $statusTransaksiadmin = $request->metode_pembayaran === 'cod' ? 'proses' : 'selesai';
 
-    // Validasi uang hanya untuk transfer
     if ($request->metode_pembayaran === 'transfer') {
         if (empty($request->jumlah_uang) || (int)$request->jumlah_uang !== $totalBayar) {
             return response()->json([
@@ -300,7 +317,6 @@ public function store(Request $request)
     DB::beginTransaction();
 
     try {
-        // Simpan transaksi utama
         $transaksiId = DB::table('transaksis')->insertGetId([
             'user_id' => $userId,
             'alamat_id' => $request->alamat_id,
@@ -311,12 +327,27 @@ public function store(Request $request)
             'biaya_pengiriman' => $biayaPengiriman,
             'total_setelah_biaya' => $totalBayar,
             'jumlah_uang' => $request->jumlah_uang,
+            'status_transaksi' => $statusTransaksiadmin,
+            'catatan_umum' => $request->catatan_umum ?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Kelompokkan produk per toko
         $groupedByToko = $cartItems->groupBy('toko_id');
+
+        // Hitung total per toko terlebih dahulu
+        $totalPerToko = [];
+        foreach ($groupedByToko as $tokoId => $items) {
+            $subtotalToko = 0;
+            foreach ($items as $item) {
+                $subtotalToko += $item->harga_produk * $item->quantity;
+            }
+            $adminToko = intval(($subtotalToko * 10) / 100);
+            $ongkirToko = intval(($subtotalToko * 2) / 100);
+            $totalPerToko[$tokoId] = $subtotalToko + $adminToko + $ongkirToko;
+        }
+
+        $totalSeluruhToko = array_sum($totalPerToko);
 
         foreach ($groupedByToko as $tokoId => $items) {
             $subtotalToko = 0;
@@ -327,9 +358,14 @@ public function store(Request $request)
             $adminToko = intval(($subtotalToko * 10) / 100);
             $ongkirToko = intval(($subtotalToko * 2) / 100);
             $totalToko = $subtotalToko + $adminToko + $ongkirToko;
+
+            // Bagi jumlah uang per toko berdasarkan proporsi total toko
+            $uang_bayar_toko = $request->metode_pembayaran === 'transfer'
+                ? intval(($totalToko / $totalSeluruhToko) * $request->jumlah_uang)
+                : null;
+
             $statusTransaksi = $request->metode_pembayaran === 'cod' ? 'proses' : 'selesai';
 
-            // Simpan transaksi toko
             $transaksiTokoId = DB::table('transaksi_tokos')->insertGetId([
                 'transaksi_id' => $transaksiId,
                 'toko_id' => $tokoId,
@@ -337,13 +373,13 @@ public function store(Request $request)
                 'biaya_admin_desa_persen' => $adminToko,
                 'biaya_pengiriman' => $ongkirToko,
                 'total_setelah_biaya' => $totalToko,
-                'jumlah_uang' => $request->jumlah_uang,
-                'status_pengiriman' => $statusTransaksi,
+                'jumlah_uang' => $uang_bayar_toko,
+                'status_pengiriman' => 'proses',
+                'status_transaksi' => $statusTransaksi,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // Simpan produk per transaksi
             foreach ($items as $item) {
                 $itemSubtotal = $item->harga_produk * $item->quantity;
                 $itemAdmin = intval($itemSubtotal * 10 / 100);
@@ -366,14 +402,12 @@ public function store(Request $request)
             }
         }
 
-        // Kurangi stok
         foreach ($cartItems as $item) {
             DB::table('produks')
                 ->where('id', $item->produk_id)
                 ->decrement('stok_produk', $item->quantity);
         }
 
-        // Hapus isi cart
         DB::table('carts')->whereIn('id', $request->cart_ids)->delete();
 
         DB::commit();
@@ -385,7 +419,6 @@ public function store(Request $request)
         ]);
     } catch (\Exception $e) {
         DB::rollBack();
-
         return response()->json([
             'success' => false,
             'message' => 'Gagal membuat transaksi: ' . $e->getMessage(),
@@ -393,58 +426,73 @@ public function store(Request $request)
     }
 }
 
-
-
 public function show($id)
 {
-    // Ambil data transaksi lengkap
+    $user = auth()->user();
+
+    // Cek role
+    $role = DB::table('role_user')
+        ->join('roles', 'roles.id', '=', 'role_user.role_id')
+        ->where('role_user.user_id', $user->id)
+        ->select('roles.name')
+        ->first();
+
+    $roleName = optional($role)->name;
+
+    // Ambil transaksi utama
     $transaksi = DB::table('transaksis')
-        ->where('id', $id)
+        ->join('users', 'users.id', '=', 'transaksis.user_id')
+        ->join('alamats', 'alamats.id', '=', 'transaksis.alamat_id')
+        ->select(
+            'transaksis.*',
+            'users.name as nama_user',
+            'alamats.nama_alamat',
+            'alamats.nama_penerima',
+            'alamats.no_hp',
+            'alamats.alamat_lengkap'
+        )
+        ->where('transaksis.id', $id)
         ->first();
 
     if (!$transaksi) {
-        return redirect()->route('transaksi.index')->with('error', 'Transaksi tidak ditemukan.');
+        return abort(404, 'Transaksi tidak ditemukan.');
     }
 
-    // Ambil data user
-    $user = DB::table('users')->where('id', $transaksi->user_id)->first();
+    // Ambil data transaksi toko
+    if ($roleName === 'toko') {
+        // User toko: hanya lihat transaksinya sendiri
+        $tokoId = DB::table('tokos')->where('pemilik_toko_id', $user->id)->value('id');
 
-    // Ambil data alamat pengiriman
-    $alamat = DB::table('alamats')->where('id', $transaksi->alamat_id)->first();
+        $transaksiTokos = DB::table('transaksi_tokos')
+            ->join('tokos', 'tokos.id', '=', 'transaksi_tokos.toko_id')
+            ->where('transaksi_tokos.transaksi_id', $id)
+            ->where('transaksi_tokos.toko_id', $tokoId)
+            ->select('transaksi_tokos.*', 'tokos.nama_toko')
+            ->get();
 
-    // Decode produk dari JSON
-    $produkItems = json_decode($transaksi->produk, true) ?: [];
-    $produkDetails = [];
-    $totalProduk = 0;
-
-    foreach ($produkItems as $item) {
-        if (!isset($item['produk_id'])) continue;
-
-        $produk = DB::table('produks')->where('id', $item['produk_id'])->first();
-        if (!$produk) continue;
-
-        $harga = $item['harga'] ?? 0;
-        $jumlah = $item['jumlah'] ?? ($item['qty'] ?? 0);
-        $subtotal = $harga * $jumlah;
-        $totalProduk += $subtotal;
-
-        $produkDetails[] = [
-            'produk_id' => $produk->id,
-            'nama'      => $produk->nama_produk,
-            'harga'     => $harga,
-            'jumlah'    => $jumlah,
-            'subtotal'  => $subtotal,
-            'foto'      => $produk->foto_url ?? null, // kolom ini harus tersedia
-        ];
+        if ($transaksiTokos->isEmpty()) {
+            return abort(403, 'Anda tidak memiliki akses ke transaksi ini.');
+        }
+    } else {
+        // Superadmin: ambil semua toko yang terlibat
+        $transaksiTokos = DB::table('transaksi_tokos')
+            ->join('tokos', 'tokos.id', '=', 'transaksi_tokos.toko_id')
+            ->where('transaksi_tokos.transaksi_id', $id)
+            ->select('transaksi_tokos.*', 'tokos.nama_toko')
+            ->get();
     }
 
-    // Tambahan untuk view
-    $transaksi->user = $user;
-    $transaksi->alamat = $alamat;
-    $transaksi->total_produk = $totalProduk;
+    // Tambahkan produk-produknya
+    foreach ($transaksiTokos as $toko) {
+        $produk = DB::table('transaksi_produks')
+            ->where('transaksi_toko_id', $toko->id)
+            ->get();
+        $toko->produks = $produk;
+    }
 
-    return view('backend.manajementtransaksi.transaksi.show', compact('transaksi', 'produkDetails'));
+    return view('backend.manajementtransaksi.transaksi.show', compact('transaksi', 'transaksiTokos', 'roleName'));
 }
+
 
 
     /**

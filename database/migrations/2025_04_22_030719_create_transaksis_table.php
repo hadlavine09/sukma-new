@@ -22,6 +22,7 @@ return new class extends Migration
         $table->integer('biaya_pengiriman')->nullable();
         $table->integer('total_setelah_biaya');
         $table->integer('jumlah_uang')->nullable();
+        $table->enum('status_transaksi', ['proses','selesai'])->default('proses');
         $table->timestamps();
         $table->softDeletes();
     });
