@@ -34,7 +34,7 @@ public function index(Request $request)
                 ->join('transaksis', 'transaksi_tokos.transaksi_id', '=', 'transaksis.id')
                 ->join('users', 'transaksis.user_id', '=', 'users.id')
                 ->where('transaksi_tokos.toko_id', $tokoId)
-                ->where('transaksi_tokos.status_pengiriman', 'proses')
+                ->where('transaksis.status_transaksi', 'selesai')
                 ->select(
                     'transaksis.id as transaksi_id',
                     'transaksis.kode_transaksi',
@@ -91,6 +91,48 @@ public function index(Request $request)
     }
 
     return view('backend.manajementtransaksi.transaksi.index');
+}
+public function index_pengiriman(Request $request)
+{
+    $user = auth()->user();
+
+    if ($request->ajax()) {
+    $transaksi = DB::table('transaksi_tokos')
+    ->join('transaksis', 'transaksi_tokos.transaksi_id', '=', 'transaksis.id')
+    ->join('users', 'transaksis.user_id', '=', 'users.id')
+    ->where('transaksi_tokos.status_pengiriman', 'proses')
+    ->select(
+        'transaksi_tokos.id as transaksi_toko_id',
+        'transaksis.kode_transaksi',
+        'users.name as pembeli',
+        'transaksis.metode_pembayaran',
+        'transaksis.status_transaksi',
+        'transaksi_tokos.total_setelah_biaya as total_bayar',
+        'transaksi_tokos.status_pengiriman',
+        'transaksis.created_at'
+    )
+    ->orderByDesc('transaksis.created_at')
+    ->get();
+        return DataTables::of($transaksi)
+            ->addIndexColumn()
+            ->editColumn('metode_pembayaran', function ($data) {
+                return strtoupper($data->metode_pembayaran);
+            })
+            ->editColumn('created_at', function ($data) {
+                return \Carbon\Carbon::parse($data->created_at)->format('d M Y, H:i');
+            })
+            ->addColumn('action', function ($data) {
+                return '
+                    <a href="' . route('pengiriman.show', $data->transaksi_toko_id) . '" class="btn btn-info btn-sm">
+                        <i class="bi bi-eye"></i> Detail
+                    </a>
+                ';
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+    }
+
+    return view('backend.manajementtransaksi.pengiriman.index');
 }
 
 
@@ -491,7 +533,40 @@ public function show($id)
 
     return view('backend.manajementtransaksi.transaksi.show', compact('transaksi', 'transaksiTokos', 'roleName'));
 }
+public function show_pengiriman($id)
+{
+    $transaksiToko = DB::table('transaksis')
+        ->join('users', 'transaksis.user_id', '=', 'users.id')
+        ->join('alamats', 'transaksis.alamat_id', '=', 'alamats.id')
+        ->join('transaksi_tokos','transaksis.id','=','transaksi_tokos.transaksi_id')
+        ->join('tokos', 'transaksi_tokos.toko_id', '=', 'tokos.id')
+        ->select(
+            'transaksis.*',
+            'transaksi_tokos.id as transaksi_toko_id',
+            'transaksi_tokos.status_pengiriman',
+            'transaksi_tokos.status_transaksi',
+            'transaksi_tokos.subtotal',
+            'transaksi_tokos.biaya_admin_desa_persen',
+            'transaksi_tokos.biaya_pengiriman',
+            'transaksi_tokos.total_setelah_biaya',
+            'transaksi_tokos.jumlah_uang',
+            'users.name as nama_user',
+            'tokos.nama_toko',
+            'alamats.nama_alamat',
+            'alamats.nama_penerima',
+            'alamats.no_hp',
+            'alamats.alamat_lengkap',
+        )
+        ->where('transaksi_tokos.id', $id)
+        ->first();
 
+    // Ambil semua produk berdasarkan transaksi_toko_id
+    $produks = DB::table('transaksi_produks')
+        ->where('transaksi_toko_id', $id)
+        ->get();
+
+    return view('backend.manajementtransaksi.pengiriman.show', compact('transaksiToko', 'produks'));
+}
 
 
     /**

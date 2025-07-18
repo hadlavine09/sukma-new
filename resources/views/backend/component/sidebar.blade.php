@@ -7,12 +7,45 @@
 @endphp
 <div class="app-sidebar__overlay" data-toggle="sidebar"></div>
 <aside class="app-sidebar">
-  <div class="app-sidebar__user"><img class="app-sidebar__user-avatar" src="https://randomuser.me/api/portraits/men/1.jpg" alt="User Image">
-    <div>
-      <p class="app-sidebar__user-name">{{ auth()->user()->username }}</p>
-      <p class="app-sidebar__user-designation">Frontend Developer</p>
-    </div>
+@php
+    use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\DB;
+
+    $isToko = Auth::check() && Auth::user()->hasRole('toko');
+    $imgSrc = 'https://randomuser.me/api/portraits/men/1.jpg'; // default image
+
+    $kategori_toko = null;
+
+    if ($isToko) {
+        $toko = DB::table('tokos')
+            ->where('pemilik_toko_id', Auth::user()->id)
+            ->join('kategori_tokos', 'tokos.kategori_toko_id', '=', 'kategori_tokos.id')
+            ->select('tokos.logo_toko', 'kategori_tokos.nama_kategori_toko')
+            ->first();
+
+        if ($toko) {
+            $kategori_toko = $toko->nama_kategori_toko;
+
+            // Jika ada logo toko, ubah $imgSrc ke path storage
+            if ($toko->logo_toko) {
+                $imgSrc = asset('storage/' . $toko->logo_toko);
+            }
+        }
+    }
+@endphp
+
+<div class="app-sidebar__user">
+  <img class="app-sidebar__user-avatar" src="{{ $imgSrc }}" alt="User Image">
+  <div>
+    <p class="app-sidebar__user-name">{{ auth()->user()->username }}</p>
+
+    @if ($kategori_toko)
+        <p class="app-sidebar__user-designation">{{ $kategori_toko }}</p>
+    @endif
   </div>
+</div>
+
+
   <ul class="app-menu">
     <li><a class="app-menu__item active" href="{{ route('dashboard')}}"><i class="app-menu__icon bi bi-speedometer"></i><span class="app-menu__label">Dashboard</span></a></li>
     @if ($role && $role->id == 1)
@@ -46,18 +79,12 @@
             <li><a class="treeview-item" href="{{ route('produk.index')}}"><i class="icon bi bi-circle-fill"></i> Produk</a></li>
         </ul>
         </li>
-        {{-- <li class="treeview"><a class="app-menu__item" href="{{ asset('assets_backend/#')}}" data-toggle="treeview"><i class="app-menu__icon bi bi-ui-checks"></i><span class="app-menu__label">Manajemen Material</span><i class="treeview-indicator bi bi-chevron-right"></i></a>
-            <ul class="treeview-menu">
-            <li><a class="treeview-item" href="{{ route('material.index')}}"><i class="icon bi bi-circle-fill"></i> Material</a></li>
-            <li><a class="treeview-item" href="{{ route('supplier.index')}}"><i class="icon bi bi-circle-fill"></i> Supplier</a></li>
-            <li><a class="treeview-item" href="{{ route('transaksi_material.index')}}"><i class="icon bi bi-circle-fill"></i> Transaksi</a></li>
-        </ul>
-    </li> --}}
     @endif
     <li class="treeview"><a class="app-menu__item" href="{{ asset('assets_backend/#')}}" data-toggle="treeview"><i class="app-menu__icon bi bi-ui-checks"></i><span class="app-menu__label">Manajemen Transaksi</span><i class="treeview-indicator bi bi-chevron-right"></i></a>
     <ul class="treeview-menu">
         <li><a class="treeview-item" href="{{ route('transaksi.index')}}"><i class="icon bi bi-circle-fill"></i> Transaksi</a></li>
         <li><a class="treeview-item" href="{{ route('produk.index')}}"><i class="icon bi bi-circle-fill"></i> Laporan</a></li>
+        <li><a class="treeview-item" href="{{ route('pengiriman.index')}}"><i class="icon bi bi-circle-fill"></i> Pengiriman</a></li>
     </ul>
     </li>
 

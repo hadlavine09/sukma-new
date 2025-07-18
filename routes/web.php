@@ -319,6 +319,15 @@ Route::prefix('manajemen-transaksi')->group(function () {
         Route::get('edit/{id}', [TransaksiController::class, 'edit'])->name('transaksi.edit');
         Route::get('show/{id}', [TransaksiController::class, 'show'])->name('transaksi.show');
     });
+    Route::prefix('pengiriman')->group(function () {
+        Route::get('/', [TransaksiController::class, 'index_pengiriman'])->name('pengiriman.index');
+        Route::get('create', [TransaksiController::class, 'create'])->name('pengiriman.create');
+        Route::post('store', [TransaksiController::class, 'store'])->name('pengiriman.store');
+        Route::put('update/{id}', [TransaksiController::class, 'update'])->name('pengiriman.update');
+        Route::post('destroy', [TransaksiController::class, 'destroy'])->name('pengiriman.destroy');
+        Route::get('edit/{id}', [TransaksiController::class, 'edit'])->name('pengiriman.edit');
+        Route::get('show/{id}', [TransaksiController::class, 'show_pengiriman'])->name('pengiriman.show');
+    });
 });
 Route::prefix('FrontEnd')->group(function () {
     Route::get('GetTagFrontEnd', [ProdukController::class, 'GetTagFrontEnd'])->name('frontend.GetTagFrontEnd');
