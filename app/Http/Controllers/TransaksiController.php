@@ -328,7 +328,6 @@ public function store(Request $request)
             'total_setelah_biaya' => $totalBayar,
             'jumlah_uang' => $request->jumlah_uang,
             'status_transaksi' => $statusTransaksiadmin,
-            'catatan_umum' => $request->catatan_umum ?? null,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

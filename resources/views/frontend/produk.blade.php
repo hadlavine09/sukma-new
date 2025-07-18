@@ -7,7 +7,7 @@
         <div class="container-fluid">
             <div class="row mb-4">
                 <div class="col-12 d-flex flex-wrap justify-content-between align-items-center">
-                    <h2 class="section-title mb-0">Category</h2>
+                    <h2 class="section-title mb-0">Kategori</h2>
                     <div class="d-flex align-items-center">
                         <div class="swiper-buttons">
                             <button class="swiper-prev category-carousel-prev btn btn-yellow">❮</button>
@@ -301,17 +301,8 @@
 
                 <div class="bootstrap-tabs product-tabs">
                     <div class="tabs-header d-flex justify-content-between border-bottom my-5">
-                        <h3>Trending Products</h3>
-                        <nav>
-                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                                <a href="#" class="nav-link text-uppercase fs-6 active" id="nav-all-tab"
-                                    data-bs-toggle="tab" data-bs-target="#nav-all">All</a>
-                                <a href="#" class="nav-link text-uppercase fs-6" id="nav-fruits-tab"
-                                    data-bs-toggle="tab" data-bs-target="#nav-fruits">Fruits & Veges</a>
-                                <a href="#" class="nav-link text-uppercase fs-6" id="nav-juices-tab"
-                                    data-bs-toggle="tab" data-bs-target="#nav-juices">Juices</a>
-                            </div>
-                        </nav>
+                        <h3>Produk</h3>
+
                     </div>
                     <div class="tab-content" id="nav-tabContent">
                         <div class="tab-pane fade show active" id="nav-all" role="tabpanel"

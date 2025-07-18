@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -111,32 +113,95 @@ public function index()
         return view('backend.dashboard', compact('tokoData'));
 
     } elseif ($roleName === 'superadmin') {
-        // Dashboard khusus untuk superadmin
-        $tokoData = [
-            'total_toko' => 232323,
-            'total_pengguna' => 23232,
-            'penghasilan_bulan_ini' => 12500000,
-            'total_transaksi_semua_toko' => 320,
-            'rating_toko_semua' => 4.7,
-            'penghasilan_7_hari_toko' => [200000, 350000, 400000, 280000, 600000, 750000, 1000000],
-            'produk_likes_top' => [
-                ['name' => 'Sambal Pedas', 'value' => 120],
-                ['name' => 'Keripik Kentang', 'value' => 85],
-                ['name' => 'Brownies', 'value' => 75],
-            ],
-            'kategori_terjual' => [
-                ['name' => 'Makanan', 'value' => 200],
-                ['name' => 'Minuman', 'value' => 100],
-                ['name' => 'Snack', 'value' => 150],
-            ],
-            'transaksi_status' => [
-                ['name' => 'Sukses', 'value' => 320],
-                ['name' => 'Pending', 'value' => 80],
-                ['name' => 'Gagal', 'value' => 15],
-            ]
-        ];
+    // Total Toko Aktif
+    $total_toko = DB::table('tokos')
+        ->where('status_toko', 'izinkan')
+        ->count();
 
-        return view('backend.dashboardsuperadmin', compact('tokoData','roleName'));
+    // Total User dengan role 'user'
+    $total_user = User::whereHas('roles', function ($query) {
+        $query->where('name', 'user');
+    })->count();
+
+    // Penghasilan Bulan Ini
+    $penghasilan_admin = DB::table('transaksis')
+        ->where('status_transaksi', 'selesai')
+        ->whereMonth('created_at', Carbon::now()->month)
+        ->sum('biaya_admin_desa_persen');
+
+    // Total Transaksi selesai
+    $total_transaksi = DB::table('transaksis')
+        ->where('status_transaksi', 'selesai')
+        ->count();
+
+   $hariMap = [
+    'Monday' => 'Senin',
+    'Tuesday' => 'Selasa',
+    'Wednesday' => 'Rabu',
+    'Thursday' => 'Kamis',
+    'Friday' => 'Jumat',
+    'Saturday' => 'Sabtu',
+    'Sunday' => 'Minggu'
+];
+
+$penghasilanPerHari = array_fill_keys(array_keys($hariMap), 0);
+
+$penghasilan_7_hari_raw = DB::table('transaksi_tokos')
+    ->where('status_transaksi', 'selesai')
+    ->whereDate('created_at', '>=', Carbon::now()->startOfWeek())
+    ->selectRaw("TO_CHAR(created_at, 'FMDay') as hari, SUM(subtotal + biaya_admin_desa_persen) as total_penghasilan")
+    ->groupBy(DB::raw("TO_CHAR(created_at, 'FMDay')"))
+    ->get();
+
+foreach ($penghasilan_7_hari_raw as $item) {
+    $dayEnglish = trim($item->hari); // 'Monday', 'Tuesday', etc.
+    if (isset($penghasilanPerHari[$dayEnglish])) {
+        $penghasilanPerHari[$dayEnglish] = (float) $item->total_penghasilan;
+    }
+}
+
+$penghasilan_7_hari_chart = [];
+foreach ($hariMap as $en => $id) {
+    $penghasilan_7_hari_chart[] = [
+        'label' => $id,
+        'value' => $penghasilanPerHari[$en]
+    ];
+}
+
+   $kategori_terlaris = DB::table('transaksi_produks')
+    ->join('produks', 'transaksi_produks.nama_produk', '=', 'produks.nama_produk')
+    ->join('kategori_produks', 'produks.kategori_produk_id', '=', 'kategori_produks.id')
+    ->select(
+        'kategori_produks.nama_kategori_produk',
+        DB::raw('SUM(transaksi_produks.qty) as total_terjual')
+    )
+    ->groupBy('kategori_produks.id', 'kategori_produks.nama_kategori_produk')
+    ->orderByDesc('total_terjual')
+    ->limit(7)
+    ->get();
+    // dd($kategori_terlaris);
+
+    // Toko Terlaris
+    $tokoTerlaris = DB::table('transaksi_produks')
+        ->join('transaksi_tokos', 'transaksi_produks.transaksi_toko_id', '=', 'transaksi_tokos.id')
+        ->join('tokos', 'transaksi_tokos.toko_id', '=', 'tokos.id')
+        ->select('tokos.nama_toko', DB::raw('SUM(transaksi_produks.qty) as total_terjual'))
+        ->groupBy('tokos.nama_toko')
+        ->orderByDesc('total_terjual')
+        ->first();
+
+    return view('backend.dashboardsuperadmin', [
+        'tokoData' => [
+            'total_toko' => $total_toko,
+            'total_pengguna' => $total_user,
+            'penghasilan_bulan_ini' => $penghasilan_admin,
+            'total_transaksi_semua_toko' => $total_transaksi,
+            'penghasilan_7_hari_chart' => $penghasilan_7_hari_chart,
+            'kategori_terlaris' => $kategori_terlaris,
+            'toko_terlaris' => $tokoTerlaris
+        ]
+    ]);
+
     } else {
         // Role lain tidak diizinkan
         abort(403, 'Akses ditolak. Role tidak diizinkan.');

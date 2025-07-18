@@ -252,8 +252,9 @@
         products.forEach(item => {
             const diskonBadge = item.diskon > 0 ?
                 `<span class="badge bg-success position-absolute m-3">-${item.diskon}%</span>` : '';
-            const tags = item.tags && item.tags.length ?
-                `<div class="mt-1 small text-muted">Tags: ${item.tags.join(', ')}</div>` : '';
+           const tags = item.tags && item.tags.length
+                                        ? `<div class="mt-1 small text-muted">Tags: ${item.tags.map(tag => tag.nama_tag).join(', ')}</div>`
+                                        : '';
             const linkDetailProduk = `detail/${encodeURIComponent(item.nama_produk)}?kode=${encodeURIComponent(item.kode_produk)}`;
 
             const html = `

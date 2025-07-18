@@ -118,7 +118,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/alamat/{id}', [AlamatController::class, 'show'])->name('alamat.show');
 
             Route::post('store', [AlamatController::class, 'store'])->name('alamat.store');
-Route::put('/alamat/{id}', [AlamatController::class, 'update'])->name('alamat.update');
+            Route::put('/alamat/{id}', [AlamatController::class, 'update'])->name('alamat.update');
             Route::post('/updateUtama/{id}', [AlamatController::class, 'updateutama'])->name('alamat.updateutama');
             Route::delete('/alamat/{id}', [AlamatController::class, 'destroy'])->name('alamat.destroy');
         });
